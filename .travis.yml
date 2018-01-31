@@ -2,9 +2,12 @@ branches:
   only:
     - master
 
-language: c
+language: python
 
 install:
-  
+  - pip install cpplint
+  - sudo apt-get install cppcheck
+
 script:
-  
+  - cpplint --linelength=200 --filter=-legal/copyright,-build/c++11 --extensions=cpp,hpp --headers=hpp $(find . -name \*.hpp -or -name \*.cpp)
+  - cppcheck .
