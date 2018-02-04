@@ -75,7 +75,7 @@ int main(int argc, char *argv[]){
       ClearScreen();
     }
 
-    double e[2]  = {0.0, 0.0}, force[2] = {0.0, 0.0}, distance= 0.0, r[2] = {0.0, 0.0},r_norm[2] = {0.0, 0.0}, x_diff, y_diff, sq_distance, accel[2] = {0.0, 0.0};
+    double e[2]  = {0.0, 0.0}, force[2] = {0.0, 0.0}, distance= 0.0, r_norm[2] = {0.0, 0.0}, x_diff, y_diff, sq_distance, accel[2] = {0.0, 0.0};
     for (i = 0; i < N; i++) {
       if (graphics == 1) {
         DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
@@ -85,60 +85,51 @@ int main(int argc, char *argv[]){
       
       force[0] = 0.0;
       force[1] = 0.0;
-      const double PREC = 10000000.0;
+
       
       for (j = 0; j < N; j++) {
         if (i != j) { 
-          x_diff = galaxy[i].pos_x * PREC - galaxy[j].pos_x * PREC;
-          y_diff = galaxy[i].pos_y * PREC - galaxy[j].pos_y * PREC;
-          /* x_diff /= PREC; */
-          /* y_diff /= PREC; */
+          x_diff = galaxy[i].pos_x  - galaxy[j].pos_x;
+          y_diff = galaxy[i].pos_y  - galaxy[j].pos_y;
          
           sq_distance = (x_diff * x_diff) + (y_diff * y_diff);
           distance = sqrt(sq_distance);
-          sq_distance = 1/ sq_distance;
-          const double dist = 1 / distance;
+          // sq_distance = 1/ sq_distance;
+          // const double dist = 1 / distance;
           
-          e[0] = x_diff * dist;
-          e[1] = y_diff * dist;
-          r[0] = x_diff * e[0];
-          r[1] = y_diff * e[1];
-          r_norm[0] = r[0] * dist;
-          r_norm[1] = r[1] * dist;
+          /* e[0] = x_diff / distance; */
+          /* e[1] = y_diff / distance; */
+          r_norm[0] = x_diff / distance;
+          r_norm[1] = y_diff / distance;
           
           double correction = (distance+eps);
           correction = correction * correction * correction;
           correction = 1 / correction;
-            /* if (distance * 1.0 < 1.0) { */
-            force[0] +=  galaxy[j].mass * r[0] * correction;
-            force[1] +=  galaxy[j].mass * r[1] * correction;
-            /*   } else { */
-            /* force[0] += galaxy[i].mass * galaxy[j].mass * r_norm[0] * sq_distance; */
-            /* force[1] += galaxy[i].mass * galaxy[j].mass * r_norm[1] * sq_distance; */
-            //}
+          //if (distance * 1.0 < 1.0) {
+          force[0] +=  galaxy[j].mass * x_diff *  correction; 
+          force[1] +=  galaxy[j].mass * y_diff *  correction; 
+          /* } else { */
+          /*   force[0] +=  galaxy[j].mass * r_norm[0] / sq_distance; */
+          /*   force[1] +=  galaxy[j].mass * r_norm[1] / sq_distance; */
+          /* } */
         }
       }
-      force[0] *= (-1.0 * gravity); 
-      force[1] *= (-1.0 * gravity); 
+      
+      force[0] *= (-1 * gravity * galaxy[i].mass); 
+      force[1] *= (-1 * gravity * galaxy[i].mass);
+
       accel[0] = force[0] / galaxy[i].mass;//* ;
       accel[1] = force[1] / galaxy[i].mass;//* w-1.0 * gravity;
-
-      /* galaxy_next_step[i].velocity_x = galaxy[i].velocity_x + delta_t * accel[0]/PREC ; */
-      /* galaxy_next_step[i].velocity_y = galaxy[i].velocity_y + delta_t * accel[1]/PREC ; */
-      /* galaxy_next_step[i].pos_x = galaxy[i].pos_x + delta_t * galaxy_next_step[i].velocity_x; */
-      /* galaxy_next_step[i].pos_y = galaxy[i].pos_y + delta_t * galaxy_next_step[i].velocity_y; */
-      /* galaxy_next_step[i].pos_x = galaxy[i].pos_x + delta_t * galaxy[i].velocity_x; */
-      /* galaxy_next_step[i].pos_y = galaxy[i].pos_y + delta_t * galaxy[i].velocity_y; */
-
-      galaxy[i].velocity_x += delta_t * accel[0] / PREC;
-      galaxy[i].velocity_y += delta_t * accel[1] / PREC;
-      galaxy[i].pos_x += delta_t * galaxy[i].velocity_x;
-      galaxy[i].pos_y += delta_t * galaxy[i].velocity_y;
+    
+      galaxy_next_step[i].velocity_x =galaxy[i].velocity_x + delta_t * accel[0];
+      galaxy_next_step[i].velocity_y =galaxy[i].velocity_y + delta_t * accel[1];
+      galaxy_next_step[i].pos_x = galaxy[i].pos_x + delta_t * galaxy_next_step[i].velocity_x;
+      galaxy_next_step[i].pos_y = galaxy[i].pos_y + delta_t * galaxy_next_step[i].velocity_y;
 
       //  }
       
     }
-    //pointer_swap((void**)&galaxy,(void**) &galaxy_next_step);
+    pointer_swap((void**)&galaxy, (void**)&galaxy_next_step);
     if (graphics) {
       Refresh();
       usleep(3000);
