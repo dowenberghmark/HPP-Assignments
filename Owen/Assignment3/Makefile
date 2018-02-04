@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS=-std=c11 -Wall -g
+CFLAGS=-std=c11 -Wall -g -Ofast
 LDLIBS=-L/opt/X11/lib -lX11 -lm
 INCLUDES=-I/opt/X11/include
 DEBUG=-g -DDEBUG
@@ -11,6 +11,7 @@ all: galsim galaxy.o
 
 galaxy.o: graphics.o galaxy.c
 	$(CC) $(CFLAGS) -D _DEFAULT_SOURCE -c galaxy.c
+
 
 galsim: galaxy.c $(OBJS)
 	$(CC) $(OBJS) $(LDLIBS)  -o $(PROGRAM)

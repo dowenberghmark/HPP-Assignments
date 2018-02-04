@@ -5,6 +5,15 @@
 #include <stdint.h>
 #include <unistd.h>
 #include "./graphics/graphics.h"
+#include <sys/time.h>
+
+static double get_wall_seconds() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  double seconds = tv.tv_sec + (double)tv.tv_usec / 1000000;
+  return seconds;
+}
+
 
 #define NR_ARGS 6
 
@@ -33,7 +42,8 @@ void write_to_file(star_t *galaxy, int N);
 void printer(star_t *galaxy, int N);
 //  Swapping pointers
 void pointer_swap(void **a, void **b);
-
+//  Calculating force for one object
+double calc_force(star_t *galaxy, int N, int object);
 
 int main(int argc, char *argv[]){
   
@@ -49,8 +59,12 @@ int main(int argc, char *argv[]){
   double delta_t = atof(argv[4]);
   const uint8_t graphics = atoi(argv[5]);
 
+  double timer = get_wall_seconds();
+  
   star_t *galaxy = malloc(N * sizeof(star_t));
   star_t *galaxy_next_step = malloc(N * sizeof(star_t));
+
+  
   if (galaxy == NULL && galaxy_next_step != NULL) {
     printf("%s\n", "Out of memory");
     exit(EXIT_FAILURE);
@@ -68,65 +82,52 @@ int main(int argc, char *argv[]){
   
   int i, j = 0, k;
   const double eps = 1e-3;
-    
+  double force[2];
+  double distance, sq_distance, acceleration[2];
+  double x_diff, y_diff;
+  double distance_stability;
+  double cube_distance_stability;
+  double one_over_cube_distance_stability;
   // Main driver for the simulation
   for (k = 0; k < n_steps; k++) {
     if (graphics) {
       ClearScreen();
     }
 
-    double e[2]  = {0.0, 0.0}, force[2] = {0.0, 0.0}, distance= 0.0, r_norm[2] = {0.0, 0.0}, x_diff, y_diff, sq_distance, accel[2] = {0.0, 0.0};
     for (i = 0; i < N; i++) {
-      if (graphics == 1) {
+      if (graphics) {
         DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
       }
-      
-      
-      
+            
       force[0] = 0.0;
       force[1] = 0.0;
 
-      
       for (j = 0; j < N; j++) {
         if (i != j) { 
-          x_diff = galaxy[i].pos_x  - galaxy[j].pos_x;
-          y_diff = galaxy[i].pos_y  - galaxy[j].pos_y;
+          x_diff = galaxy[i].pos_x - galaxy[j].pos_x;
+          y_diff = galaxy[i].pos_y - galaxy[j].pos_y;
          
           sq_distance = (x_diff * x_diff) + (y_diff * y_diff);
           distance = sqrt(sq_distance);
-          // sq_distance = 1/ sq_distance;
-          // const double dist = 1 / distance;
           
-          /* e[0] = x_diff / distance; */
-          /* e[1] = y_diff / distance; */
-          r_norm[0] = x_diff / distance;
-          r_norm[1] = y_diff / distance;
           
-          double correction = (distance+eps);
-          correction = correction * correction * correction;
-          correction = 1 / correction;
-          //if (distance * 1.0 < 1.0) {
-          force[0] +=  galaxy[j].mass * x_diff *  correction; 
-          force[1] +=  galaxy[j].mass * y_diff *  correction; 
-          /* } else { */
-          /*   force[0] +=  galaxy[j].mass * r_norm[0] / sq_distance; */
-          /*   force[1] +=  galaxy[j].mass * r_norm[1] / sq_distance; */
-          /* } */
+          distance_stability = (distance+eps);
+          cube_distance_stability = distance_stability * distance_stability * distance_stability;
+          one_over_cube_distance_stability = 1 / cube_distance_stability;
+
+          force[0] +=  galaxy[j].mass * x_diff *  one_over_cube_distance_stability; 
+          force[1] +=  galaxy[j].mass * y_diff *  one_over_cube_distance_stability; 
         }
       }
       
-      force[0] *= (-1 * gravity * galaxy[i].mass); 
-      force[1] *= (-1 * gravity * galaxy[i].mass);
-
-      accel[0] = force[0] / galaxy[i].mass;//* ;
-      accel[1] = force[1] / galaxy[i].mass;//* w-1.0 * gravity;
+      
+      acceleration[0] = -1 * gravity * force[0] ;
+      acceleration[1] = -1 * gravity * force[1] ;
     
-      galaxy_next_step[i].velocity_x =galaxy[i].velocity_x + delta_t * accel[0];
-      galaxy_next_step[i].velocity_y =galaxy[i].velocity_y + delta_t * accel[1];
+      galaxy_next_step[i].velocity_x = galaxy[i].velocity_x + delta_t * acceleration[0];
+      galaxy_next_step[i].velocity_y = galaxy[i].velocity_y + delta_t * acceleration[1];
       galaxy_next_step[i].pos_x = galaxy[i].pos_x + delta_t * galaxy_next_step[i].velocity_x;
       galaxy_next_step[i].pos_y = galaxy[i].pos_y + delta_t * galaxy_next_step[i].velocity_y;
-
-      //  }
       
     }
     pointer_swap((void**)&galaxy, (void**)&galaxy_next_step);
@@ -145,6 +146,9 @@ int main(int argc, char *argv[]){
   write_to_file(galaxy, N);
   free(galaxy_next_step);
   free(galaxy);
+
+  printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
+  
   return 0;
 }
 
@@ -189,10 +193,7 @@ void write_to_file(star_t *galaxy, int N){
     exit(EXIT_FAILURE);
   }
   
-
   fwrite(galaxy , SIZE, AMOUNT_ELEMENTS, fd);
-
-  
   fclose(fd);
 }
 
