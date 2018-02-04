@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
   int N = atoi(argv[1]);
   char * file_name = argv[2];
   int n_steps = atoi(argv[3]);
-  double gravity = -100.0 / N;
+  double gravity = 100.0 / N;
   double delta_t = atof(argv[4]);
   const uint8_t graphics = atoi(argv[5]);
 
@@ -58,66 +58,87 @@ int main(int argc, char *argv[]){
   //  Load the data 
   read_config(file_name,galaxy, N);
   memcpy(galaxy_next_step, galaxy, 6 * N * sizeof(double));
-
+  
+  /* printer(galaxy,10); */
+  /* printf("%s\n", "here"); */
   if (graphics) {
     InitializeGraphics(argv[0],windowWidth,windowWidth);
     SetCAxes(0,1);
   }
   
-  int i, j, k;
-  double force, norm_dist_vec, dist_cube, rel_distance, distance;
+  int i, j = 0, k;
   const double eps = 1e-3;
-  
+    
   // Main driver for the simulation
   for (k = 0; k < n_steps; k++) {
-    // printer(galaxy, 1);
-    pointer_swap((void**)&galaxy,(void**) &galaxy_next_step);
     if (graphics) {
       ClearScreen();
     }
+
+    double e[2]  = {0.0, 0.0}, force[2] = {0.0, 0.0}, distance= 0.0, r[2] = {0.0, 0.0},r_norm[2] = {0.0, 0.0}, x_diff, y_diff, sq_distance, accel[2] = {0.0, 0.0};
     for (i = 0; i < N; i++) {
       if (graphics == 1) {
         DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
       }
       
-      force = 0.0;
-      double e_x = 1.0, e_y = 1.0;
-      if (galaxy[i].velocity_x < 0) 
-        e_x = -1.0;
       
-      if (galaxy[i].velocity_y < 0) 
-        e_y = -1.0;
+      
+      force[0] = 0.0;
+      force[1] = 0.0;
+      const double PREC = 10000000.0;
       
       for (j = 0; j < N; j++) {
-        if (i == j) {
-        } else {
-          distance = (galaxy[i].pos_x - galaxy[j].pos_x) * (galaxy[i].pos_x - galaxy[j].pos_x) + (galaxy[i].pos_y - galaxy[j].pos_y) * (galaxy[i].pos_y - galaxy[j].pos_y);
-          distance = sqrt(distance);
+        if (i != j) { 
+          x_diff = galaxy[i].pos_x * PREC - galaxy[j].pos_x * PREC;
+          y_diff = galaxy[i].pos_y * PREC - galaxy[j].pos_y * PREC;
+          /* x_diff /= PREC; */
+          /* y_diff /= PREC; */
+         
+          sq_distance = (x_diff * x_diff) + (y_diff * y_diff);
+          distance = sqrt(sq_distance);
+          sq_distance = 1/ sq_distance;
+          const double dist = 1 / distance;
           
-          rel_distance = (galaxy[i].pos_x - galaxy[j].pos_x) * e_x + (galaxy[i].pos_y - galaxy[j].pos_y) * e_y;
-
-          norm_dist_vec = rel_distance / distance;
-          dist_cube = ( distance + eps);
-
-          //  dist_cube = (norm_dist_vec);
-          dist_cube = dist_cube * dist_cube * dist_cube;
-          //  Distance is much less
-          if (distance * 100.0 < 1.0) {
-            force += (galaxy[j].mass  / dist_cube) * rel_distance;
-          } else {
-            force += (galaxy[j].mass  / (distance * distance)) * norm_dist_vec;
-          }
+          e[0] = x_diff * dist;
+          e[1] = y_diff * dist;
+          r[0] = x_diff * e[0];
+          r[1] = y_diff * e[1];
+          r_norm[0] = r[0] * dist;
+          r_norm[1] = r[1] * dist;
+          
+          double correction = (distance+eps);
+          correction = correction * correction * correction;
+          correction = 1 / correction;
+            /* if (distance * 1.0 < 1.0) { */
+            force[0] +=  galaxy[j].mass * r[0] * correction;
+            force[1] +=  galaxy[j].mass * r[1] * correction;
+            /*   } else { */
+            /* force[0] += galaxy[i].mass * galaxy[j].mass * r_norm[0] * sq_distance; */
+            /* force[1] += galaxy[i].mass * galaxy[j].mass * r_norm[1] * sq_distance; */
+            //}
         }
       }
-      force *= gravity * galaxy[i].mass;
-      double accel = force / galaxy[i].mass * delta_t;
-      galaxy_next_step[i].velocity_x = galaxy[i].velocity_x + accel;
-      galaxy_next_step[i].velocity_y = galaxy[i].velocity_y + accel;
-      galaxy_next_step[i].pos_x = galaxy[i].pos_x + (galaxy[i].velocity_x * delta_t);
-      galaxy_next_step[i].pos_y = galaxy[i].pos_y + (galaxy[i].velocity_y * delta_t);
+      force[0] *= (-1.0 * gravity); 
+      force[1] *= (-1.0 * gravity); 
+      accel[0] = force[0] / galaxy[i].mass;//* ;
+      accel[1] = force[1] / galaxy[i].mass;//* w-1.0 * gravity;
 
-    //    pointer_swap((void**)&galaxy,(void**) &galaxy_next_step);
+      /* galaxy_next_step[i].velocity_x = galaxy[i].velocity_x + delta_t * accel[0]/PREC ; */
+      /* galaxy_next_step[i].velocity_y = galaxy[i].velocity_y + delta_t * accel[1]/PREC ; */
+      /* galaxy_next_step[i].pos_x = galaxy[i].pos_x + delta_t * galaxy_next_step[i].velocity_x; */
+      /* galaxy_next_step[i].pos_y = galaxy[i].pos_y + delta_t * galaxy_next_step[i].velocity_y; */
+      /* galaxy_next_step[i].pos_x = galaxy[i].pos_x + delta_t * galaxy[i].velocity_x; */
+      /* galaxy_next_step[i].pos_y = galaxy[i].pos_y + delta_t * galaxy[i].velocity_y; */
+
+      galaxy[i].velocity_x += delta_t * accel[0] / PREC;
+      galaxy[i].velocity_y += delta_t * accel[1] / PREC;
+      galaxy[i].pos_x += delta_t * galaxy[i].velocity_x;
+      galaxy[i].pos_y += delta_t * galaxy[i].velocity_y;
+
+      //  }
+      
     }
+    //pointer_swap((void**)&galaxy,(void**) &galaxy_next_step);
     if (graphics) {
       Refresh();
       usleep(3000);

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS=-std=c11 -Wall 
+CFLAGS=-std=c11 -Wall -g
 LDLIBS=-L/opt/X11/lib -lX11 -lm
 INCLUDES=-I/opt/X11/include
 DEBUG=-g -DDEBUG

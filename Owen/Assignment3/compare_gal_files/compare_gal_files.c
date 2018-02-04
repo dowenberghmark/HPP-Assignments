@@ -113,6 +113,14 @@ int main(int argc, const char* argv[]) {
     update_maxdiff(pos_dx, pos_dy, &pos_maxdiff);
     update_maxdiff(vel_dx, vel_dy, &vel_maxdiff);
   }
+  
+  for (i = 0; i < N; i++) {
+    printf("i: %d, x: %fl, y: %fl, mass: %fl, velo_x: %fl, velo_y: %fl\n", i, buf1[0 + i *6], buf1[1 + i *6], buf1[2 + i *6], buf1[3 + i *6], buf1[4 + i *6]);
+
+    printf("i: %d, x: %fl, y: %fl, mass: %fl, velo_x: %fl, velo_y: %fl\n", i, buf2[0 + i *6], buf2[1 + i *6], buf2[2 + i *6], buf2[3 + i *6], buf2[4 + i *6]);
+
+  }
+  
   printf("pos_maxdiff = %16.12f\n", pos_maxdiff);
   return 0;
 }
