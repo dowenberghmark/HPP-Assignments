@@ -10,15 +10,15 @@
 static double get_wall_seconds() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  double seconds = tv.tv_sec + (double)tv.tv_usec / 1000000;
+  double seconds = tv.tv_sec + (double) tv.tv_usec / 1000000;
   return seconds;
 }
 
 
 #define NR_ARGS 6
 
-const float circleRadius=0.004, circleColor=0;
-const int windowWidth=800;
+const float circleRadius = 0.004, circleColor = 0;
+const int windowWidth = 800;
 
 
 #ifdef DEBUG
@@ -27,8 +27,7 @@ const int windowWidth=800;
 #define DEBUG_FLAG 0
 #endif
 
-typedef struct particle
-{
+typedef struct particle {
   double pos_x, pos_y, mass, velocity_x, velocity_y, brightness;
 } star_t;
 
@@ -45,7 +44,7 @@ void pointer_swap(void **a, void **b);
 //  Calculating force for one object
 double calc_force(star_t *galaxy, int N, int object);
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
   
   if (argc != NR_ARGS) {
     print_usage(argv[0]);
@@ -81,7 +80,7 @@ int main(int argc, char *argv[]){
   }
   
   int i, j = 0, k;
-  const double eps = 1e-3;
+  const double EPS = 1e-3;
   double force[2];
   double distance, sq_distance, acceleration[2];
   double x_diff, y_diff;
@@ -111,7 +110,7 @@ int main(int argc, char *argv[]){
           distance = sqrt(sq_distance);
           
           
-          distance_stability = (distance+eps);
+          distance_stability = (distance+EPS);
           cube_distance_stability = distance_stability * distance_stability * distance_stability;
           one_over_cube_distance_stability = 1 / cube_distance_stability;
 
