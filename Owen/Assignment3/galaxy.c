@@ -55,13 +55,14 @@ int main(int argc, char *argv[]) {
   int N = atoi(argv[1]);
   char * file_name = argv[2];
   int n_steps = atoi(argv[3]);
-  double gravity = 100.0 / N;
-  double delta_t = atof(argv[4]);
+  const double gravity = 100.0 / N;
+  const double delta_t = atof(argv[4]);
   const uint8_t graphics = atoi(argv[5]);
 
   double timer = get_wall_seconds();
-  star_t *galaxy = malloc(N * sizeof(star_t));
-  star_t *galaxy_next_step = malloc(N * sizeof(star_t));
+  star_t *galaxy = malloc(N * 2 *sizeof(star_t));
+  star_t *galaxy_next_step = &galaxy[N];
+  //star_t *galaxy_next_step = malloc(N * sizeof(star_t));
 
   if (galaxy == NULL && galaxy_next_step != NULL) {
     printf("%s\n", "Out of memory");
@@ -99,7 +100,6 @@ int main(int argc, char *argv[]) {
        curr_force[1] = 0.0; 
 
       for (j = i + 1; j < N; j++) {
-        /* if (i != j) { */
           x_diff = galaxy[i].pos_x - galaxy[j].pos_x;
           y_diff = galaxy[i].pos_y - galaxy[j].pos_y;
           sq_distance = (x_diff * x_diff) + (y_diff * y_diff);
@@ -115,7 +115,6 @@ int main(int argc, char *argv[]) {
           forces[i].y += curr_force[1];
           forces[j].y -= curr_force[1];
           
-        /* } */
       }
       acceleration[0] = -1 * gravity * forces[i].x / galaxy[i].mass;
       acceleration[1] = -1 * gravity * forces[i].y / galaxy[i].mass;
@@ -141,7 +140,7 @@ int main(int argc, char *argv[]) {
 
   write_to_file(galaxy, N);
   free(forces);
-  free(galaxy_next_step);
+  //  free(galaxy_next_step);
   free(galaxy);
 
   printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
@@ -167,7 +166,10 @@ void read_config(char *file_name, star_t *galaxy, int N) {
     printf("Couldn't find the file: %s\n", file_name);
     exit(EXIT_FAILURE);
   }
-  fread(galaxy, SIZE, AMOUNT_ELEMENTS, fd);
+  int error_check = fread(galaxy, SIZE, AMOUNT_ELEMENTS, fd);
+  if (error_check < 0) {
+    exit(EXIT_FAILURE);
+  }
   fclose(fd);
 }
 
@@ -181,7 +183,11 @@ void write_to_file(star_t *galaxy, int N) {
     exit(EXIT_FAILURE);
   }
 
-  fwrite(galaxy , SIZE, AMOUNT_ELEMENTS, fd);
+  int error_check = fwrite(galaxy , SIZE, AMOUNT_ELEMENTS, fd);
+  if (error_check < 0) {
+    exit(EXIT_FAILURE);
+  }
+  
   fclose(fd);
 }
 
