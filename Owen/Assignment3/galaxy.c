@@ -31,6 +31,10 @@ typedef struct particle {
   double pos_x, pos_y, mass, velocity_x, velocity_y, brightness;
 } star_t;
 
+typedef struct forces {
+  double x,y;
+} force_direction_t;
+
 //  Writting help messages
 void print_usage(char *prg_name);
 //  Reading in the configuration file into struct
@@ -51,13 +55,14 @@ int main(int argc, char *argv[]) {
   int N = atoi(argv[1]);
   char * file_name = argv[2];
   int n_steps = atoi(argv[3]);
-  double gravity = 100.0 / N;
-  double delta_t = atof(argv[4]);
+  const double gravity = 100.0 / N;
+  const double delta_t = atof(argv[4]);
   const uint8_t graphics = atoi(argv[5]);
 
   double timer = get_wall_seconds();
-  star_t *galaxy = malloc(N * sizeof(star_t));
-  star_t *galaxy_next_step = malloc(N * sizeof(star_t));
+  star_t *galaxy = malloc(N * 2 *sizeof(star_t));
+  star_t *galaxy_next_step = &galaxy[N];
+  //star_t *galaxy_next_step = malloc(N * sizeof(star_t));
 
   if (galaxy == NULL && galaxy_next_step != NULL) {
     printf("%s\n", "Out of memory");
@@ -71,9 +76,11 @@ int main(int argc, char *argv[]) {
     SetCAxes(0, 1);
   }
 
+  force_direction_t *forces = calloc(N, sizeof(force_direction_t));
+  
   int i, j = 0, k;
   const double EPS = 1e-3;
-  double force[2];
+  double curr_force[2];
   double distance, sq_distance, acceleration[2];
   double x_diff, y_diff;
   double distance_stability;
@@ -84,16 +91,15 @@ int main(int argc, char *argv[]) {
     if (graphics) {
       ClearScreen();
     }
-
+    
     for (i = 0; i < N; i++) {
       if (graphics) {
         DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
       }
-      force[0] = 0.0;
-      force[1] = 0.0;
+       curr_force[0] = 0.0; 
+       curr_force[1] = 0.0; 
 
-      for (j = 0; j < N; j++) {
-        if (i != j) {
+      for (j = i + 1; j < N; j++) {
           x_diff = galaxy[i].pos_x - galaxy[j].pos_x;
           y_diff = galaxy[i].pos_y - galaxy[j].pos_y;
           sq_distance = (x_diff * x_diff) + (y_diff * y_diff);
@@ -101,16 +107,23 @@ int main(int argc, char *argv[]) {
           distance_stability = (distance+EPS);
           cube_distance_stability = distance_stability * distance_stability * distance_stability;
           one_over_cube_distance_stability = 1 / cube_distance_stability;
-          force[0] +=  galaxy[j].mass * x_diff *  one_over_cube_distance_stability;
-          force[1] +=  galaxy[j].mass * y_diff *  one_over_cube_distance_stability;
-        }
+          curr_force[0] =  galaxy[i].mass * galaxy[j].mass * x_diff * one_over_cube_distance_stability;
+          curr_force[1] =  galaxy[i].mass *galaxy[j].mass * y_diff * one_over_cube_distance_stability;
+
+          forces[i].x += curr_force[0];
+          forces[j].x -= curr_force[0];
+          forces[i].y += curr_force[1];
+          forces[j].y -= curr_force[1];
+          
       }
-      acceleration[0] = -1 * gravity * force[0];
-      acceleration[1] = -1 * gravity * force[1];
+      acceleration[0] = -1 * gravity * forces[i].x / galaxy[i].mass;
+      acceleration[1] = -1 * gravity * forces[i].y / galaxy[i].mass;
       galaxy_next_step[i].velocity_x = galaxy[i].velocity_x + delta_t * acceleration[0];
       galaxy_next_step[i].velocity_y = galaxy[i].velocity_y + delta_t * acceleration[1];
       galaxy_next_step[i].pos_x = galaxy[i].pos_x + delta_t * galaxy_next_step[i].velocity_x;
       galaxy_next_step[i].pos_y = galaxy[i].pos_y + delta_t * galaxy_next_step[i].velocity_y;
+      forces[i].x = 0.0;
+      forces[i].y = 0.0;
     }
     pointer_swap((void**)&galaxy, (void**)&galaxy_next_step);
     if (graphics) {
@@ -126,7 +139,8 @@ int main(int argc, char *argv[]) {
   // Dumping the data
 
   write_to_file(galaxy, N);
-  free(galaxy_next_step);
+  free(forces);
+  //  free(galaxy_next_step);
   free(galaxy);
 
   printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
@@ -152,7 +166,10 @@ void read_config(char *file_name, star_t *galaxy, int N) {
     printf("Couldn't find the file: %s\n", file_name);
     exit(EXIT_FAILURE);
   }
-  fread(galaxy, SIZE, AMOUNT_ELEMENTS, fd);
+  int error_check = fread(galaxy, SIZE, AMOUNT_ELEMENTS, fd);
+  if (error_check < 0) {
+    exit(EXIT_FAILURE);
+  }
   fclose(fd);
 }
 
@@ -166,7 +183,11 @@ void write_to_file(star_t *galaxy, int N) {
     exit(EXIT_FAILURE);
   }
 
-  fwrite(galaxy , SIZE, AMOUNT_ELEMENTS, fd);
+  int error_check = fwrite(galaxy , SIZE, AMOUNT_ELEMENTS, fd);
+  if (error_check < 0) {
+    exit(EXIT_FAILURE);
+  }
+  
   fclose(fd);
 }
 
