@@ -8,7 +8,7 @@ INP=(./input_data/ellipse_N_00010.gal ./input_data/ellipse_N_00100.gal ./input_d
 
 make clean
 make all
-gcc -std=c11 -lm compare_gal_files/compare_gal_files.c  -o comp
+gcc -std=c11  compare_gal_files/compare_gal_files.c  -o comp -lm
 
 
 #for var in ${NUMBS[*]}; do

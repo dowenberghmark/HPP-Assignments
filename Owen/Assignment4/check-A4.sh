@@ -1,4 +1,4 @@
-# Script for checking A3.tar.gz file for Assignment 3 subimssion
+# Script for checking A4.tar.gz file for Assignment 3 subimssion
 
 echo Checking that input_data is available
 ls -l input_data/ellipse_N_00010.gal || exit 1
@@ -17,18 +17,18 @@ echo Creating temporary directory tmpdir_for_checking
 # Create new tmpdir_for_checking directory
 mkdir tmpdir_for_checking || exit 1
 
-echo Copying A3.tar.gz file into tmpdir_for_checking directory
+echo Copying A4.tar.gz file into tmpdir_for_checking directory
 
-cp A3.tar.gz tmpdir_for_checking || exit 1
+cp A4.tar.gz tmpdir_for_checking || exit 1
 
 # cd into the tmpdir_for_checking directory
 cd tmpdir_for_checking || exit 1
 
-echo Unpacking the A3.tar.gz file
-tar -xzf A3.tar.gz || exit 1
+echo Unpacking the A4.tar.gz file
+tar -xzf A4.tar.gz || exit 1
 
-echo Doing cd into A3 directory
-cd A3 || exit 1
+echo Doing cd into A4 directory
+cd A4 || exit 1
 
 echo Checking that report.pdf file exists
 ls -l report.pdf || exit 1
@@ -62,7 +62,7 @@ make || exit 1
 ls -l galsim || exit 1
 
 echo Checking that running galsim executable works
-./galsim 10 ../../input_data/ellipse_N_00010.gal 200 1e-5 0 || exit 1
+./galsim 10 ../../input_data/ellipse_N_00010.gal 200 1e-5 0 0 || exit 1
 
 echo Checking that result.gal file was created
 ls -l result.gal || exit 1
@@ -76,7 +76,32 @@ echo Using compare_gal_files program to check result.gal file
 cat tmp.txt
 grep pos_maxdiff tmp.txt | grep 00000000 || exit 1
 
+echo Checking that running galsim executable works also for N=500
+./galsim 500 ../../input_data/ellipse_N_00500.gal 200 1e-5 0 0 || exit 1
+
+echo Using compare_gal_files program to check result.gal file
+./compare_gal_files 500 result.gal ../../ref_output_data/ellipse_N_00500_after200steps.gal > tmp.txt || exit 1
+cat tmp.txt
+grep pos_maxdiff tmp.txt | grep 00000000 || exit 1
+
+echo Running with a large theta_max value to check that the pos_maxdiff becomes large then
+./galsim 500 ../../input_data/ellipse_N_00500.gal 200 1e-5 0.4 0 || exit 1
+
+echo Using compare_gal_files program to check result.gal file, verify that we get larger diff than 0.001 in this case
+./compare_gal_files 500 result.gal ../../ref_output_data/ellipse_N_00500_after200steps.gal > tmp.txt || exit 1
+cat tmp.txt
+grep pos_maxdiff tmp.txt | grep 000 && exit 1
+
+echo Running with a theta_max=0.1 to check that the pos_maxdiff becomes reasonable then
+./galsim 500 ../../input_data/ellipse_N_00500.gal 200 1e-5 0.1 0 || exit 1
+
+echo Using compare_gal_files program to check result.gal file, verify that we get smaller diff than 0.001 in this case
+./compare_gal_files 500 result.gal ../../ref_output_data/ellipse_N_00500_after200steps.gal > tmp.txt || exit 1
+cat tmp.txt
+grep pos_maxdiff tmp.txt | grep 000 || exit 1
+grep pos_maxdiff tmp.txt | grep 00000 && exit 1
+
 # If we get to this point, then all the different tests above have passed.
 echo
-echo Congratulations, your A3.tar.gz file seems OK!
+echo Congratulations, your A4.tar.gz file seems OK!
 echo
