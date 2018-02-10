@@ -1,11 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <stdint.h>
-#include <unistd.h>
-#include "./graphics/graphics.h"
-#include <sys/time.h>
+#include "galaxy.h"
+#include "quad_tree.h"
 
 static double get_wall_seconds() {
   struct timeval tv;
@@ -14,37 +8,6 @@ static double get_wall_seconds() {
   return seconds;
 }
 
-
-#define NR_ARGS 6
-
-const float circleRadius = 0.004, circleColor = 0;
-const int windowWidth = 800;
-
-
-#ifdef DEBUG
-#define DEBUG_FLAG 1
-#else
-#define DEBUG_FLAG 0
-#endif
-
-typedef struct particle {
-  double pos_x, pos_y, mass, velocity_x, velocity_y, brightness;
-} star_t;
-
-typedef struct forces {
-  double x,y;
-} force_direction_t;
-
-//  Writting help messages
-void print_usage(char *prg_name);
-//  Reading in the configuration file into struct
-void read_config(char *file_name, star_t *galaxy, int N);
-//  Writing the current state of the galaxy to a predefined outputfile
-void write_to_file(star_t *galaxy, int N);
-//  Printing the galaxys params
-void printer(star_t *galaxy, int N);
-//  Swapping pointers
-void pointer_swap(void **a, void **b);
 
 int main(int argc, char *argv[]) {
   if (argc != NR_ARGS) {
@@ -76,7 +39,8 @@ int main(int argc, char *argv[]) {
     SetCAxes(0, 1);
   }
 
-  force_direction_t *forces = calloc(N, sizeof(force_direction_t));
+  force_direction_t *forces = malloc(N * sizeof(force_direction_t));
+  data_t *node_data = malloc(sizeof(data_t) * N);
   
   int i, j = 0, k;
   const double EPS = 1e-3;
@@ -86,51 +50,88 @@ int main(int argc, char *argv[]) {
   double distance_stability;
   double cube_distance_stability;
   double one_over_cube_distance_stability;
+
+  quad_node *root;
+
   // Main driver for the simulation
   for (k = 0; k < n_steps; k++) {
     if (graphics) {
       ClearScreen();
     }
-    
+    root = malloc(sizeof(quad_node));
+    root->parr = NULL;
+    root->data = NULL;
+    root->low_bound_x = 0;
+    root->low_bound_y = 0;
+    root->height_width = 1;
+    root->level = 1;
+    root->leaf[0] = NULL;
+    root->leaf[1] = NULL;
+    root->leaf[2] = NULL;
+    root->leaf[3] = NULL;
+
+    for (i = 0; i < N; i++) {
+      node_data[i].mass = galaxy[i].mass;
+      node_data[i].pos_x = galaxy[i].pos_x;
+      node_data[i].pos_y = galaxy[i].pos_y;
+      insert(root, (node_data+i), i);
+      forces[i].x = 0.0;
+      forces[i].y = 0.0;
+    }
+    update_mass(root);
     for (i = 0; i < N; i++) {
       if (graphics) {
         DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
       }
-       curr_force[0] = 0.0; 
-       curr_force[1] = 0.0; 
+      quad_node *this_node = search_node(root, i);
+      for (j = 0; j < N; j++) {
 
-      for (j = i + 1; j < N; j++) {
-          x_diff = galaxy[i].pos_x - galaxy[j].pos_x;
-          y_diff = galaxy[i].pos_y - galaxy[j].pos_y;
-          sq_distance = (x_diff * x_diff) + (y_diff * y_diff);
-          distance = sqrt(sq_distance);
-          distance_stability = (distance+EPS);
-          cube_distance_stability = distance_stability * distance_stability * distance_stability;
-          one_over_cube_distance_stability = 1 / cube_distance_stability;
-          curr_force[0] =  galaxy[i].mass * galaxy[j].mass * x_diff * one_over_cube_distance_stability;
-          curr_force[1] =  galaxy[i].mass *galaxy[j].mass * y_diff * one_over_cube_distance_stability;
 
-          forces[i].x += curr_force[0];
-          forces[j].x -= curr_force[0];
-          forces[i].y += curr_force[1];
-          forces[j].y -= curr_force[1];
+        for (int k = 0 ; k < N; k++) {
+          // need to grab the mass in y slash x dir and calc the frode on it maybe create an functiopn for it in quad tree instead..
           
+        }
+
+        
       }
-      acceleration[0] = -1 * gravity * forces[i].x / galaxy[i].mass;
-      acceleration[1] = -1 * gravity * forces[i].y / galaxy[i].mass;
-      galaxy_next_step[i].velocity_x = galaxy[i].velocity_x + delta_t * acceleration[0];
-      galaxy_next_step[i].velocity_y = galaxy[i].velocity_y + delta_t * acceleration[1];
-      galaxy_next_step[i].pos_x = galaxy[i].pos_x + delta_t * galaxy_next_step[i].velocity_x;
-      galaxy_next_step[i].pos_y = galaxy[i].pos_y + delta_t * galaxy_next_step[i].velocity_y;
-      forces[i].x = 0.0;
-      forces[i].y = 0.0;
     }
-    pointer_swap((void**)&galaxy, (void**)&galaxy_next_step);
+     /*   curr_force[0] = 0.0;  */
+    /*    curr_force[1] = 0.0;  */
+
+    /*   for (j = i + 1; j < N; j++) { */
+    /*       x_diff = galaxy[i].pos_x - galaxy[j].pos_x; */
+    /*       y_diff = galaxy[i].pos_y - galaxy[j].pos_y; */
+    /*       sq_distance = (x_diff * x_diff) + (y_diff * y_diff); */
+    /*       distance = sqrt(sq_distance); */
+    /*       distance_stability = (distance+EPS); */
+    /*       cube_distance_stability = distance_stability * distance_stability * distance_stability; */
+    /*       one_over_cube_distance_stability = 1 / cube_distance_stability; */
+    /*       curr_force[0] =  galaxy[i].mass * galaxy[j].mass * x_diff * one_over_cube_distance_stability; */
+    /*       curr_force[1] =  galaxy[i].mass *galaxy[j].mass * y_diff * one_over_cube_distance_stability; */
+
+    /*       forces[i].x += curr_force[0]; */
+    /*       forces[j].x -= curr_force[0]; */
+    /*       forces[i].y += curr_force[1]; */
+    /*       forces[j].y -= curr_force[1]; */
+          
+    /*   } */
+    /*   acceleration[0] = -1 * gravity * forces[i].x / galaxy[i].mass; */
+    /*   acceleration[1] = -1 * gravity * forces[i].y / galaxy[i].mass; */
+    /*   galaxy_next_step[i].velocity_x = galaxy[i].velocity_x + delta_t * acceleration[0]; */
+    /*   galaxy_next_step[i].velocity_y = galaxy[i].velocity_y + delta_t * acceleration[1]; */
+    /*   galaxy_next_step[i].pos_x = galaxy[i].pos_x + delta_t * galaxy_next_step[i].velocity_x; */
+    /*   galaxy_next_step[i].pos_y = galaxy[i].pos_y + delta_t * galaxy_next_step[i].velocity_y; */
+    /*   forces[i].x = 0.0; */
+    /*   forces[i].y = 0.0; */
+    /* } */
+    /* pointer_swap((void**)&galaxy, (void**)&galaxy_next_step); */
+
     if (graphics) {
       Refresh();
       usleep(3000);
     }
-  }
+    delete(root);
+  } //  Ends time step loop
   if (graphics) {
     FlushDisplay();
     CloseDisplay();
@@ -142,7 +143,8 @@ int main(int argc, char *argv[]) {
   free(forces);
   //  free(galaxy_next_step);
   free(galaxy);
-
+  free(root);
+  free(node_data);
   printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
   return 0;
 }
