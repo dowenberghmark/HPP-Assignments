@@ -1,7 +1,6 @@
 #ifndef __GALAXY_H
 #define __GALAXY_H
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,9 +9,7 @@
 #include <unistd.h>
 #include "./graphics/graphics.h"
 #include <sys/time.h>
-
-
-
+#include "quad_tree.h"
 #define NR_ARGS 6
 
 const float circleRadius = 0.004, circleColor = 0;

@@ -26,9 +26,13 @@ typedef struct quad_tree{
 void insert(quad_node *curr, data_t *to_insert, int index);
 void delete(quad_node *root);
 void split(quad_node *root); //  helper function.
-quad_node *search_node(quad_node *root, int index);
+quad_node *search_node(quad_node *root, int index, data_t meta);
 void update_mass(quad_node *root);
+
+void calc_force(quad_node *root, quad_node *quad, double *force);
+void traverse_for_force(quad_node *start, quad_node *curr, double *force);
 double threshold(quad_node *root, quad_node *center);
+
 int which_leaf(quad_node *root, data_t node);
 
 
