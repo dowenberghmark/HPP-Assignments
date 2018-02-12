@@ -13,7 +13,7 @@ gcc -std=c11  compare_gal_files/compare_gal_files.c  -o comp -lm
 
 for var in ${NUMBS[*]}; do
     echo "RUNNING galsim: ${N[$var]} ${INP[$var]} 200 1e-5 0"
-    ./galsim ${N[$var]} ${INP[$var]} 200 1e-5 0.1 0
+    ./galsim ${N[$var]} ${INP[$var]} 200 1e-5 0.25 0
     echo ""
     echo "RUNNING comp: ${N[$var]} ./result.gal ${REFS[$var]}"
     ./comp ${N[$var]} ./result.gal ${REFS[$var]} > tmp.txt

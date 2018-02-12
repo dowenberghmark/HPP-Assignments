@@ -24,9 +24,7 @@ int main(int argc, char *argv[]) {
 
   double timer = get_wall_seconds();
   star_t *galaxy = malloc(N * sizeof(star_t));
-  //star_t *galaxy_next_step = &galaxy[N];
-  //star_t *galaxy_next_step = malloc(N * sizeof(star_t));
-
+ 
   if (galaxy == NULL ) {
     printf("%s\n", "Out of memory");
     exit(EXIT_FAILURE);
@@ -44,16 +42,9 @@ int main(int argc, char *argv[]) {
   
   int i, k;
   
-  /* double curr_force[2]; */
-  /* double distance, sq_distance; */
-     double acceleration[2]; 
-  /* double x_diff, y_diff; */
-  /* double distance_stability; */
-  /* double cube_distance_stability; */
-  /* double one_over_cube_distance_stability; */
+  double acceleration[2]; 
 
-     //  quad_node *root;
-
+  
   // Main driver for the simulation
   for (k = 0; k < n_steps; k++) {
     if (graphics) {
@@ -121,7 +112,7 @@ int main(int argc, char *argv[]) {
 
   write_to_file(galaxy, N);
   free(forces);
-  //  free(galaxy_next_step);
+ 
   free(galaxy);
  
   free(node_data);
