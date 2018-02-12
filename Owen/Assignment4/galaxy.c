@@ -65,7 +65,6 @@ int main(int argc, char *argv[]) {
     root->low_bound_y = 0;
     root->height_width = 1;
     root->index = -1;
-    root->level = 1;
     root->leaf[0] = NULL;
     root->leaf[1] = NULL;
     root->leaf[2] = NULL;
@@ -97,10 +96,10 @@ int main(int argc, char *argv[]) {
     }
 
     for (i = 0; i < N; i++) {
-      /* printf("force: %lf %lf\n", forces[i].x,forces[i].y ); */
+      // printf("force: %lf %lf\n", forces[i].x,forces[i].y ); 
       acceleration[0] = -1 * gravity * forces[i].x / galaxy[i].mass;
       acceleration[1] = -1 * gravity * forces[i].y / galaxy[i].mass;
-      /* printf("acc: %lf %lf\n",acceleration[0],acceleration[1] ); */
+      //printf("acc: %lf %lf\n",acceleration[0],acceleration[1] ); 
       galaxy[i].velocity_x = galaxy[i].velocity_x + delta_t * acceleration[0];
       galaxy[i].velocity_y = galaxy[i].velocity_y + delta_t * acceleration[1];
       galaxy[i].pos_x = galaxy[i].pos_x + delta_t * galaxy[i].velocity_x;

@@ -15,7 +15,6 @@ typedef struct quad_tree{
   void *parr;
   double low_bound_x, low_bound_y, height_width;
   double center_mass_x, center_mass_y, tot_mass;
-  int level;
   int index;
   
 } quad_node;
@@ -29,7 +28,8 @@ void split(quad_node *root); //  helper function.
 quad_node *search_node(quad_node *root, int index, data_t meta);
 void update_mass(quad_node *root);
 
-void calc_force(quad_node *root, quad_node *quad, double *force);
+void calc_force_aprox(quad_node *root, quad_node *quad, double *force);
+void calc_force_point(quad_node *root, quad_node *quad, double *force);
 void traverse_for_force(quad_node *start, quad_node *curr, double *force);
 double threshold(quad_node *root, quad_node *center);
 
