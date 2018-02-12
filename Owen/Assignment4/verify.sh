@@ -13,17 +13,18 @@ gcc -std=c11  compare_gal_files/compare_gal_files.c  -o comp -lm
 
 for var in ${NUMBS[*]}; do
     echo "RUNNING galsim: ${N[$var]} ${INP[$var]} 200 1e-5 0"
-    ./galsim ${N[$var]} ${INP[$var]} 200 1e-5 0
+    ./galsim ${N[$var]} ${INP[$var]} 200 1e-5 0.1 0
     echo ""
     echo "RUNNING comp: ${N[$var]} ./result.gal ${REFS[$var]}"
     ./comp ${N[$var]} ./result.gal ${REFS[$var]} > tmp.txt
     echo ""
-    grep pos_maxdiff tmp.txt | grep 00000 || exit 1
+    grep pos_maxdiff tmp.txt | grep 00000 && exit 1
+    grep pos_maxdiff tmp.txt | grep 000 || exit 1
 
 done
 
 echo "RUNNING galsim"
-./galsim ${N[5]} ${INP[5]} 100 1e-5 0
+./galsim ${N[5]} ${INP[5]} 100 1e-5 0.1 0
 echo ""
 echo "RUNNING comp"
 ./comp ${N[5]} result.gal ${REFS[5]} 

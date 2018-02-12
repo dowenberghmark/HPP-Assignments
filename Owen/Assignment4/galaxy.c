@@ -19,7 +19,8 @@ int main(int argc, char *argv[]) {
   int n_steps = atoi(argv[3]);
   const double gravity = 100.0 / N;
   const double delta_t = atof(argv[4]);
-  const uint8_t graphics = atoi(argv[5]);
+  const double theta = atof(argv[5]);
+  const uint8_t graphics = atoi(argv[6]);
 
   double timer = get_wall_seconds();
   star_t *galaxy = malloc(N * sizeof(star_t));
@@ -88,10 +89,8 @@ int main(int argc, char *argv[]) {
         DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
       }
       
-      
       quad_node *this_node = search_node(root, i, node_data[i]);
-      
-      traverse_for_force(this_node, root, (double*)(&forces[i]));     
+      traverse_for_force(this_node, root, (double*)(&forces[i]), theta);     
     
     }
 
@@ -136,6 +135,7 @@ void print_usage(char *prg_name) {
   printf("filename, path to the file with the initial configuration\n");
   printf("nsteps, the number of steps for the simulation\n");
   printf("delta_t, is the timestep size\n");
+  printf("theta_max, is the threshold\n");
   printf("graphics, to enable graphics (1 = on, 0 = off)\n");
 }
 

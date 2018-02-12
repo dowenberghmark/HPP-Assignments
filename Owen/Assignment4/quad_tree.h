@@ -10,7 +10,7 @@ typedef struct data_node{
 } data_t;
 
 typedef struct quad_tree{
-  data_t * data;
+  data_t *data;
   void *leaf[4]; //  3 top right, 2 top left, 0 bottom left, 1 bottom right. A leaf an quad_node
   void *parr;
   double low_bound_x, low_bound_y, height_width;
@@ -30,7 +30,7 @@ void update_mass(quad_node *root);
 
 void calc_force_aprox(quad_node *root, quad_node *quad, double *force);
 void calc_force_point(quad_node *root, quad_node *quad, double *force);
-void traverse_for_force(quad_node *start, quad_node *curr, double *force);
+void traverse_for_force(quad_node *start, quad_node *curr, double *force, double theta);
 double threshold(quad_node *root, quad_node *center);
 
 int which_leaf(quad_node *root, data_t node);

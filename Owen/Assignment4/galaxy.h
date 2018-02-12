@@ -10,7 +10,7 @@
 #include "./graphics/graphics.h"
 #include <sys/time.h>
 #include "quad_tree.h"
-#define NR_ARGS 6
+#define NR_ARGS 7
 
 const float circleRadius = 0.004, circleColor = 0;
 const int windowWidth = 800;
