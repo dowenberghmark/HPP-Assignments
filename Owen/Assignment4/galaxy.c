@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     root->low_bound_x = 0;
     root->low_bound_y = 0;
     root->height_width = 1;
-    root->index = -1;
+    /* root->index = -1; */
     root->leaf[0] = NULL;
     root->leaf[1] = NULL;
     root->leaf[2] = NULL;
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
     root->tot_mass = 0.0;
     
     for (i = 0; i < N; i++) {
-      insert(root, (node_data+i), i);
+      insert(root, (node_data+i)/* , i */);
       forces[i].x = 0.0;
       forces[i].y = 0.0;
     }
@@ -86,11 +86,9 @@ int main(int argc, char *argv[]) {
       if (graphics) {
         DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
       }
-      
       //quad_node *this_node = search_node(root, i, node_data[i]);
       quad_node *this_node = (quad_node*)node_data[i].which_quad;
-      traverse_for_force(this_node, root, (double*)(&forces[i]), theta);     
-    
+      traverse_for_force(this_node, root, (double*)(&forces[i]), theta);       
     }
 
     for (i = 0; i < N; i++) {
@@ -109,6 +107,7 @@ int main(int argc, char *argv[]) {
     }
     delete(root);
   } //  Ends time step loop
+  
   if (graphics) {
     FlushDisplay();
     CloseDisplay();

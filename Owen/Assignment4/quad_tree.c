@@ -4,12 +4,12 @@
 const double EPS = 1e-3;
 
 //  traversing to the existing lowest node  
-void insert(quad_node *curr, data_t *to_insert, int index) {
+void insert(quad_node *curr, data_t *to_insert/* , int index */) {
   int which_curr;
   if (curr->leaf[0] == NULL && curr->leaf[1] == NULL && curr->leaf[2] == NULL  && curr->leaf[3] == NULL ) {
     if (curr->data == NULL){
       curr->data = to_insert;
-      curr->index = index;
+      //      curr->index = index;
       //  remember to divide by mass before using it.
       curr->tot_mass = to_insert->mass;
       to_insert->which_quad = curr;
@@ -23,13 +23,13 @@ void insert(quad_node *curr, data_t *to_insert, int index) {
         printf("%s\n", "Its not in bounds for moving old data, might imply that two points are equal.");
         exit(EXIT_FAILURE);
       } 
-      insert(curr->leaf[old_which],curr->data, curr->index);
+      insert(curr->leaf[old_which],curr->data/* , curr->index */);
       which_curr = which_leaf(curr,*to_insert);
-      insert(curr->leaf[which_curr],to_insert, index);
+      insert(curr->leaf[which_curr],to_insert/* , index */);
       curr->data = NULL;
       curr->tot_mass = 0.0;
       curr->center_mass_x = 0.0;
-      curr->index = -1;
+      //curr->index = -1;
 
       curr->center_mass_y = 0.0;
     }
@@ -40,7 +40,7 @@ void insert(quad_node *curr, data_t *to_insert, int index) {
         exit(EXIT_FAILURE);
       
     } else { 
-      insert(curr->leaf[which_curr],to_insert, index);
+      insert(curr->leaf[which_curr],to_insert/* , index */);
     }
   }
 }
@@ -55,7 +55,7 @@ void split(quad_node* root) {
     root->leaf[i] = malloc(size);    
     curr = (quad_node*)(root->leaf[i]);
     curr->data = NULL;    
-    curr->index = -1;
+    //curr->index = -1;
     curr->height_width = height_width;
     curr->low_bound_x = root->low_bound_x;
     curr->low_bound_y = root->low_bound_y;
@@ -178,16 +178,16 @@ double threshold(quad_node *root, quad_node *center) {
   return (center->height_width / sqrt(sq_distance));
 }
 
-quad_node *search_node(quad_node *root, int index, data_t meta) {
-  quad_node *ret;
-  int which = which_leaf(root, meta);
-  if (index == root ->index && which == -1) {
-    ret = root;
-  } else {
-    ret = search_node(root->leaf[which], index, meta);
-  }
-  return ret;
-}
+/* quad_node *search_node(quad_node *root, int index, data_t meta) { */
+/*   quad_node *ret; */
+/*   int which = which_leaf(root, meta); */
+/*   if (index == root ->index && which == -1) { */
+/*     ret = root; */
+/*   } else { */
+/*     ret = search_node(root->leaf[which], index, meta); */
+/*   } */
+/*   return ret; */
+/* } */
 
 
 #ifdef QUAD

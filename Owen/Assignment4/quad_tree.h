@@ -20,17 +20,17 @@ typedef struct quad_tree{
   void *leaf[4];
   double low_bound_x, low_bound_y, height_width;
   double center_mass_x, center_mass_y, tot_mass;
-  int index;
+  //int index;
   
 } quad_node;
 //  Inserting the star into the quad tree
-void insert(quad_node *curr, data_t *to_insert, int index);
+void insert(quad_node *curr, data_t *to_insert/* , int index */);
 //  Deleting the quad tree
 void delete(quad_node *root);
 //  Creating memory for children leafs
 void split(quad_node *root); //  helper function.
 //  Searching for a node with the specific index_t where meta speeds up the search traversing towards the right node 
-quad_node *search_node(quad_node *root, int index, data_t meta);
+// quad_node *search_node(quad_node *root, int index, data_t meta);
 //  Calculates the center of mass and point for a tree
 void update_mass(quad_node *root);
 //  Calculating the force with the center of mass and center point
