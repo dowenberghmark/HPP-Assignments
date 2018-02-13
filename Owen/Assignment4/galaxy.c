@@ -51,7 +51,6 @@ int main(int argc, char *argv[]) {
       ClearScreen();
     }
     quad_node *root = malloc(sizeof(quad_node));
-    root->parr = NULL;
     root->data = NULL;
     root->low_bound_x = 0;
     root->low_bound_y = 0;
@@ -61,6 +60,7 @@ int main(int argc, char *argv[]) {
     root->leaf[1] = NULL;
     root->leaf[2] = NULL;
     root->leaf[3] = NULL;
+    
     root->center_mass_x = 0.0;
     root->center_mass_y = 0.0;
     root->tot_mass = 0.0;
