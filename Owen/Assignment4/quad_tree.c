@@ -1,4 +1,5 @@
 #include "quad_tree.h"
+#include <stdbool.h>
 
 const double EPS = 1e-3;
 
@@ -150,14 +151,15 @@ void calc_force_point(quad_node *root, quad_node *quad, double *force) {
 
 void traverse_for_force(quad_node* start, quad_node* curr, double *force, double theta){
   double thres = threshold(start, curr);
+  bool s[4] = {curr->leaf[0] == NULL, curr->leaf[1] == NULL, curr->leaf[2] == NULL, curr->leaf[3] == NULL};
   if(thres <= theta /* && curr->data != NULL */  ) {
     calc_force_aprox(start, curr, force);
   }
-  else if ((curr->leaf[0] == NULL && curr->leaf[1] == NULL && curr->leaf[2] == NULL  && curr->leaf[3] == NULL && curr->data != NULL && start != curr)) {
+  else if ((s[0] && s[1] && s[2]  && s[3] && curr->data != NULL && start != curr)) {
       calc_force_point(start, curr, force);
   } else {
     for (int i = 0; i < 4; i++) {
-      if (curr->leaf[i] != NULL && ((quad_node *)curr->leaf[i])->tot_mass != 0.0)
+      if ( !s[i]  && ((quad_node *)curr->leaf[i])->tot_mass != 0.0)
         traverse_for_force(start, curr->leaf[i], force, theta);
     }
   }
