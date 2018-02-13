@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
   }
 
   force_direction_t *forces = malloc(N * sizeof(force_direction_t));
-  force_direction_t *velo = malloc(N * sizeof(velo_t));
+  velo_t *velo = malloc(N * sizeof(velo_t));
   data_t *node_data = malloc(sizeof(data_t) * N);
   double *one_over_mass = malloc(sizeof(double) * N);
   int i, k;
