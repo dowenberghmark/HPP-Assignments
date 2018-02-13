@@ -76,11 +76,7 @@ int main(int argc, char *argv[]) {
     root->center_mass_y = 0.0;
     root->tot_mass = 0.0;
     
-    /* printf("Creating daaata and inserting, time_step: %d\n", k); */
     for (i = 0; i < N; i++) {
-      /* node_data[i].mass = galaxy[i].mass; */
-      /* node_data[i].pos_x = galaxy[i].pos_x; */
-      /* node_data[i].pos_y = galaxy[i].pos_y; */
       insert(root, (node_data+i), i);
       forces[i].x = 0.0;
       forces[i].y = 0.0;
@@ -98,10 +94,8 @@ int main(int argc, char *argv[]) {
     }
 
     for (i = 0; i < N; i++) {
-      // printf("force: %lf %lf\n", forces[i].x,forces[i].y ); 
       acceleration[0] = -1 * gravity * forces[i].x * one_over_mass[i];
       acceleration[1] = -1 * gravity * forces[i].y * one_over_mass[i];
-      //printf("acc: %lf %lf\n",acceleration[0],acceleration[1] ); 
       velo[i].x = velo[i].x + delta_t * acceleration[0];
       velo[i].y = velo[i].y + delta_t * acceleration[1];
       node_data[i].pos_x = node_data[i].pos_x + delta_t * velo[i].x;

@@ -26,9 +26,9 @@ typedef struct particle {
   double pos_x, pos_y, mass, velocity_x, velocity_y, brightness;
 } star_t;
 
-typedef struct forces {
-  double x,y;
-} force_direction_t;
+/* typedef struct forces { */
+/*   double x,y; */
+/* } force_direction_t; */
 typedef struct velocity {
   double x,y;
 }velo_t;

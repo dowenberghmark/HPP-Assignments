@@ -10,6 +10,10 @@ typedef struct data_node{
   void *which_quad;
 } data_t;
 
+typedef struct forces {
+  double x,y;
+} force_direction_t;
+
 typedef struct quad_tree{
   data_t *data;
   //struct quad_tree *leaf[4]; //  3 top right, 2 top left, 0 bottom left, 1 bottom right. A leaf an quad_node
