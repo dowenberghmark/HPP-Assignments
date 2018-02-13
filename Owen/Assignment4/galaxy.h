@@ -29,7 +29,9 @@ typedef struct particle {
 typedef struct forces {
   double x,y;
 } force_direction_t;
-
+typedef struct velocity {
+  double x,y;
+}velo_t;
 //  Writting help messages
 void print_usage(char *prg_name);
 //  Reading in the configuration file into struct

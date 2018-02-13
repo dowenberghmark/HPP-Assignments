@@ -118,9 +118,9 @@ void update_mass(quad_node *root) {
 void calc_force_aprox(quad_node *root, quad_node *quad, double *force) {
   data_t *point = root->data;
   double sq_distance, x_diff, y_diff, distance = 0.0, distance_stability, cube_distance_stability, one_over_cube_distance_stability;
-  
-  x_diff = point->pos_x - (quad->center_mass_x / quad->tot_mass); 
-  y_diff = point->pos_y - (quad->center_mass_y / quad->tot_mass);
+  double one_over_quad_mass = 1 / quad->tot_mass;
+  x_diff = point->pos_x - (quad->center_mass_x * one_over_quad_mass); 
+  y_diff = point->pos_y - (quad->center_mass_y * one_over_quad_mass);
   sq_distance = (x_diff * x_diff) + (y_diff * y_diff);
   
   distance = sqrt(sq_distance);

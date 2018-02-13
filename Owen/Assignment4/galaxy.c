@@ -38,12 +38,23 @@ int main(int argc, char *argv[]) {
   }
 
   force_direction_t *forces = malloc(N * sizeof(force_direction_t));
+  force_direction_t *velo = malloc(N * sizeof(velo_t));
   data_t *node_data = malloc(sizeof(data_t) * N);
-  
+  double *one_over_mass = malloc(sizeof(double) * N);
   int i, k;
   
   double acceleration[2]; 
 
+
+  for (i = 0; i < N; i++) {
+    node_data[i].mass = galaxy[i].mass;
+    one_over_mass[i] = 1 / galaxy[i].mass;
+    node_data[i].pos_x = galaxy[i].pos_x;
+    node_data[i].pos_y = galaxy[i].pos_y;
+    velo[i].x = galaxy[i].velocity_x;
+    velo[i].y = galaxy[i].velocity_y;
+  }
+ 
   
   // Main driver for the simulation
   for (k = 0; k < n_steps; k++) {
@@ -67,9 +78,9 @@ int main(int argc, char *argv[]) {
     
     /* printf("Creating daaata and inserting, time_step: %d\n", k); */
     for (i = 0; i < N; i++) {
-      node_data[i].mass = galaxy[i].mass;
-      node_data[i].pos_x = galaxy[i].pos_x;
-      node_data[i].pos_y = galaxy[i].pos_y;
+      /* node_data[i].mass = galaxy[i].mass; */
+      /* node_data[i].pos_x = galaxy[i].pos_x; */
+      /* node_data[i].pos_y = galaxy[i].pos_y; */
       insert(root, (node_data+i), i);
       forces[i].x = 0.0;
       forces[i].y = 0.0;
@@ -87,13 +98,13 @@ int main(int argc, char *argv[]) {
 
     for (i = 0; i < N; i++) {
       // printf("force: %lf %lf\n", forces[i].x,forces[i].y ); 
-      acceleration[0] = -1 * gravity * forces[i].x / galaxy[i].mass;
-      acceleration[1] = -1 * gravity * forces[i].y / galaxy[i].mass;
+      acceleration[0] = -1 * gravity * forces[i].x * one_over_mass[i];
+      acceleration[1] = -1 * gravity * forces[i].y * one_over_mass[i];
       //printf("acc: %lf %lf\n",acceleration[0],acceleration[1] ); 
-      galaxy[i].velocity_x = galaxy[i].velocity_x + delta_t * acceleration[0];
-      galaxy[i].velocity_y = galaxy[i].velocity_y + delta_t * acceleration[1];
-      galaxy[i].pos_x = galaxy[i].pos_x + delta_t * galaxy[i].velocity_x;
-      galaxy[i].pos_y = galaxy[i].pos_y + delta_t * galaxy[i].velocity_y;
+      velo[i].x = velo[i].x + delta_t * acceleration[0];
+      velo[i].y = velo[i].y + delta_t * acceleration[1];
+      node_data[i].pos_x = node_data[i].pos_x + delta_t * velo[i].x;
+      node_data[i].pos_y = node_data[i].pos_y + delta_t * velo[i].y;
    
     }
 
@@ -108,13 +119,20 @@ int main(int argc, char *argv[]) {
     CloseDisplay();
   }
 
+  for (i = 0; i < N; i++) {
+    galaxy[i].pos_x = node_data[i].pos_x;
+    galaxy[i].pos_y = node_data[i].pos_y;
+    galaxy[i].velocity_x = velo[i].x;
+    galaxy[i].velocity_y = velo[i].y;
+  }
+ 
   // Dumping the data
 
   write_to_file(galaxy, N);
   free(forces);
- 
+  free(velo);
   free(galaxy);
- 
+  free(one_over_mass);
   free(node_data);
   printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
   return 0;
