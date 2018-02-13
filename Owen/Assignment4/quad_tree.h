@@ -5,9 +5,9 @@
 #include <math.h>
 //  #include "galaxy.h"
 
-volatile double THETA;
 typedef struct data_node{
   double pos_x,pos_y,mass;
+  void *which_quad;
 } data_t;
 
 typedef struct quad_tree{
@@ -34,7 +34,7 @@ void calc_force_aprox(quad_node *root, quad_node *quad, double *force);
 // Calculating the force for a point to point
 void calc_force_point(quad_node *root, quad_node *quad, double *force);
 //  Traverser for using the different force calculations 
-void traverse_for_force(quad_node *start, quad_node *curr, double *force/*, double theta*/);
+void traverse_for_force(quad_node *start, quad_node *curr, double *force, double theta);
 //  Calculates the threshold value
 double threshold(quad_node *root, quad_node *center);
 //  Finds which leaf the node should contain in.
