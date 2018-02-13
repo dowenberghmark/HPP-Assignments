@@ -1,5 +1,5 @@
 CC = gcc
-EXTRA=-pg -no-pie
+EXTRA=
 CFLAGS=-std=c11 -Wall -Ofast -march=native -ftree-vectorize $(EXTRA)
 LDLIBS=-L/opt/X11/lib -lX11 -lm $(EXTRA) -flto
 INCLUDES=-I/opt/X11/include
