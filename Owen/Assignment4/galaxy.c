@@ -19,7 +19,8 @@ int main(int argc, char *argv[]) {
   int n_steps = atoi(argv[3]);
   const double gravity = 100.0 / N;
   const double delta_t = atof(argv[4]);
-  const double theta = atof(argv[5]);
+  //  const double theta = atof(argv[5]);
+  THETA = atof(argv[5]);
   const uint8_t graphics = atoi(argv[6]);
 
   double timer = get_wall_seconds();
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
       }
       
       quad_node *this_node = search_node(root, i, node_data[i]);
-      traverse_for_force(this_node, root, (double*)(&forces[i]), theta);     
+      traverse_for_force(this_node, root, (double*)(&forces[i]) /*, theta*/);     
     
     }
 

@@ -48,7 +48,7 @@ void insert(quad_node *curr, data_t *to_insert, int index) {
 void split(quad_node* root) {
   size_t size = sizeof(quad_node);  
   quad_node *curr;
-  double height_width =  ((quad_node *)root)->height_width /  2;
+  double height_width =  ((quad_node *)root)->height_width *  0.5;
   for (int i = 0; i < 4; i++) {
     root->leaf[i] = malloc(size);    
     curr = (quad_node*)(root->leaf[i]);
@@ -147,9 +147,9 @@ void calc_force_point(quad_node *root, quad_node *quad, double *force) {
   force[1] +=  point->mass * quad->data->mass * y_diff * one_over_cube_distance_stability;
 }
 
-void traverse_for_force(quad_node* start, quad_node* curr, double *force, double theta){
+void traverse_for_force(quad_node* start, quad_node* curr, double *force/*, double theta*/){
   double thres = threshold(start, curr);
-   if(thres <= theta  /* && curr->data != NULL */  ) {
+  if(thres <= THETA/*theta */ /* && curr->data != NULL */  ) {
     calc_force_aprox(start, curr, force);
   }
   else if ((curr->leaf[0] == NULL && curr->leaf[1] == NULL && curr->leaf[2] == NULL  && curr->leaf[3] == NULL && curr->data != NULL && start != curr)) {
@@ -157,7 +157,7 @@ void traverse_for_force(quad_node* start, quad_node* curr, double *force, double
   } else {
     for (int i = 0; i < 4; i++) {
       if (curr->leaf[i] != NULL && ((quad_node *)curr->leaf[i])->tot_mass != 0.0)
-        traverse_for_force(start, curr->leaf[i], force, theta);
+        traverse_for_force(start, curr->leaf[i], force/*, theta*/);
     }
   }
 }
@@ -165,8 +165,9 @@ void traverse_for_force(quad_node* start, quad_node* curr, double *force, double
 double threshold(quad_node *root, quad_node *center) {
   data_t *point = root->data;
   double sq_distance, cen_x, cen_y;
-  cen_x = center->low_bound_x + center->height_width / 2;
-  cen_y = center->low_bound_y + center->height_width / 2;
+  const double one_over_two = 1 / 2;
+  cen_x = center->low_bound_x + center->height_width * one_over_two;
+  cen_y = center->low_bound_y + center->height_width * one_over_two;
   sq_distance = (point->pos_x - cen_x) * (point->pos_x - cen_x) +
       (point->pos_y - cen_y) * (point->pos_y - cen_y);
   return (center->height_width / sqrt(sq_distance));
