@@ -1,0 +1,4 @@
+N = 500
+fileName1 = 'result.gal'
+fileName2 = '../../ref_output_data/ellipse_N_00500_after200steps.gal'
+pos_maxdiff =   0.000076799161
