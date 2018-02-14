@@ -1,2 +1,0 @@
-15.588552
-Intel(R) Xeon(R) CPU E5520  @ 2.27GHz, GCC 5.4.0, Linux, kernel release 4.4.0-112-generic
