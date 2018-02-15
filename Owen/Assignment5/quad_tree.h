@@ -13,6 +13,9 @@ typedef struct data_node{
 typedef struct forces {
   double x,y;
 } force_direction_t;
+typedef struct velocity {
+  double x,y;
+}velo_t;
 
 typedef struct quad_tree{
   data_t *data;
@@ -34,13 +37,13 @@ void split(quad_node *root); //  helper function.
 //  Calculates the center of mass and point for a tree
 void update_mass(quad_node *root);
 //  Calculating the force with the center of mass and center point
-void calc_force_aprox(quad_node *root, quad_node *quad, double *force);
+void calc_force_aprox(data_t *root, quad_node *quad, force_direction_t *force);
 // Calculating the force for a point to point
-void calc_force_point(quad_node *root, quad_node *quad, double *force);
+void calc_force_point(data_t *root, quad_node *quad, force_direction_t *force);
 //  Traverser for using the different force calculations 
-void traverse_for_force(quad_node *start, quad_node *curr, double *force, double theta);
+void traverse_for_force(data_t *start, quad_node *curr, force_direction_t *force, double theta);
 //  Calculates the threshold value
-double threshold(quad_node *root, quad_node *center);
+double threshold(data_t *root, quad_node *center);
 //  Finds which leaf the node should contain in.
 int which_leaf(quad_node *root, data_t node);
 

@@ -7,13 +7,13 @@ INP=(./input_data/ellipse_N_00010.gal ./input_data/ellipse_N_00100.gal ./input_d
 
 
 make clean
-make all
+make 
 gcc -std=c11  compare_gal_files/compare_gal_files.c  -o comp -lm
 
 
 for var in ${NUMBS[*]}; do
     echo "RUNNING galsim: ${N[$var]} ${INP[$var]} 200 1e-5 0"
-    ./galsim ${N[$var]} ${INP[$var]} 200 1e-5 0.15 0
+    ./galsim ${N[$var]} ${INP[$var]} 200 1e-5 0.15 0 2
     echo ""
     echo "RUNNING comp: ${N[$var]} ./result.gal ${REFS[$var]}"
     ./comp ${N[$var]} ./result.gal ${REFS[$var]} > tmp.txt
@@ -24,7 +24,7 @@ for var in ${NUMBS[*]}; do
 done
 
 echo "RUNNING galsim"
-./galsim ${N[5]} ${INP[5]} 100 1e-5 0.1 0
+./galsim ${N[5]} ${INP[5]} 100 1e-5 0.25 0 9
 echo ""
 echo "RUNNING comp"
 ./comp ${N[5]} result.gal ${REFS[5]} 

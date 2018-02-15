@@ -10,7 +10,8 @@
 #include "./graphics/graphics.h"
 #include <sys/time.h>
 #include "quad_tree.h"
-#define NR_ARGS 7
+#include <pthread.h>
+#define NR_ARGS 8
 
 const float circleRadius = 0.004, circleColor = 0;
 const int windowWidth = 800;
@@ -26,12 +27,23 @@ typedef struct particle {
   double pos_x, pos_y, mass, velocity_x, velocity_y, brightness;
 } star_t;
 
+typedef struct thread_meta_data{
+  double delta_t;
+  velo_t *velo;
+  data_t *node_data;
+  double *one_over_mass;
+  quad_node *root;
+  double gravity;
+  force_direction_t *forces;
+  double theta;
+  int start_point;
+  int end_point;
+
+}thread_t;
+
 /* typedef struct forces { */
 /*   double x,y; */
 /* } force_direction_t; */
-typedef struct velocity {
-  double x,y;
-}velo_t;
 //  Writting help messages
 void print_usage(char *prg_name);
 //  Reading in the configuration file into struct
@@ -42,7 +54,8 @@ void write_to_file(star_t *galaxy, int N);
 void printer(star_t *galaxy, int N);
 //  Swapping pointers
 void pointer_swap(void **a, void **b);
-
+//  The work a single thread should do.
+void thread_work(void *arg);
 
 
 #endif //  __GALAXY_H

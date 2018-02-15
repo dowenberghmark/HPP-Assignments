@@ -117,8 +117,8 @@ void update_mass(quad_node *root) {
 }
 
 //  Using the centre of mass for both.  
-void calc_force_aprox(quad_node *root, quad_node *quad, double *force) {
-  data_t *point = root->data;
+void calc_force_aprox(data_t *root, quad_node *quad, force_direction_t *force) {
+  data_t *point = root;
   double sq_distance, x_diff, y_diff, distance, distance_stability, cube_distance_stability, one_over_cube_distance_stability;
   double one_over_quad_mass = 1 / quad->tot_mass;
   x_diff = point->pos_x - (quad->center_mass_x * one_over_quad_mass); 
@@ -129,12 +129,12 @@ void calc_force_aprox(quad_node *root, quad_node *quad, double *force) {
   distance_stability = (distance+EPS);
   cube_distance_stability = distance_stability * distance_stability * distance_stability;
   one_over_cube_distance_stability = 1 / cube_distance_stability;
-  force[0] +=  point->mass * quad->tot_mass * x_diff * one_over_cube_distance_stability;
-  force[1] +=  point->mass * quad->tot_mass * y_diff * one_over_cube_distance_stability;
+  force->x +=  point->mass * quad->tot_mass * x_diff * one_over_cube_distance_stability;
+  force->y +=  point->mass * quad->tot_mass * y_diff * one_over_cube_distance_stability;
 }
 
-void calc_force_point(quad_node *root, quad_node *quad, double *force) {
-  data_t *point = root->data;
+void calc_force_point(data_t *root, quad_node *quad, force_direction_t *force) {
+  data_t *point = root;
   double sq_distance, x_diff, y_diff, distance , distance_stability, cube_distance_stability, one_over_cube_distance_stability;
   
   x_diff = point->pos_x - (quad->data->pos_x); 
@@ -145,12 +145,12 @@ void calc_force_point(quad_node *root, quad_node *quad, double *force) {
   distance_stability = (distance+EPS);
   cube_distance_stability = distance_stability * distance_stability * distance_stability;
   one_over_cube_distance_stability = 1 / cube_distance_stability;
-  force[0] +=  point->mass * quad->data->mass * x_diff * one_over_cube_distance_stability;
-  force[1] +=  point->mass * quad->data->mass * y_diff * one_over_cube_distance_stability;
+  force->x +=  point->mass * quad->data->mass * x_diff * one_over_cube_distance_stability;
+  force->y +=  point->mass * quad->data->mass * y_diff * one_over_cube_distance_stability;
 }
 
 
-void traverse_for_force(quad_node* start, quad_node* curr, double *force, double theta){
+void traverse_for_force(data_t* start, quad_node* curr, force_direction_t *force, double theta){
   double thres = threshold(start, curr);
   bool s[4] = {curr->leaf[0] == NULL, curr->leaf[1] == NULL, curr->leaf[2] == NULL, curr->leaf[3] == NULL};
   if(thres <= theta /* && curr->data != NULL */  ) {
@@ -162,19 +162,24 @@ void traverse_for_force(quad_node* start, quad_node* curr, double *force, double
         traverse_for_force(start, curr->leaf[i], force, theta);
     }
      
-  } else if ((s[0] && s[1] && s[2]  && s[3] && /* curr->data != NULL && */ start != curr)) {
+  } else if ((s[0] && s[1] && s[2]  && s[3] && /* curr->data != NULL && */ start != curr->data)) {
      calc_force_point(start, curr, force);
   }
 }
 
-double threshold(quad_node *root, quad_node *center) {
-  data_t *point = root->data;
+double threshold(data_t *root, quad_node *center) {
+  /* printf("root, %p\n",root); */
+  /* printf("center, %p\n",center); */
+  data_t *point = root;
   double sq_distance, cen_x, cen_y;
   const double one_over_two = 1 / 2;
+  /* printf("%s\n", "segis here"); */
   cen_x = center->low_bound_x + center->height_width * one_over_two;
+    /* printf("%s\n", "segis here1"); */
   cen_y = center->low_bound_y + center->height_width * one_over_two;
-  sq_distance = (point->pos_x - cen_x) * (point->pos_x - cen_x) +
-      (point->pos_y - cen_y) * (point->pos_y - cen_y);
+    /* printf("%s\n", "segis here2"); */
+  sq_distance = (point->pos_x - cen_x) * (point->pos_x - cen_x) + (point->pos_y - cen_y) * (point->pos_y - cen_y);
+    /* printf("%s\n", "segis here3"); */
   return (center->height_width / sqrt(sq_distance));
 }
 

@@ -1,7 +1,7 @@
 CC = gcc
 EXTRA=
-CFLAGS=-std=c11 -Wall -Ofast -march=native -ftree-vectorize $(EXTRA)
-LDLIBS=-L/opt/X11/lib -lX11 -lm $(EXTRA) -flto
+CFLAGS=-std=c11 -Wall -Ofast -march=native -ftree-vectorize $(EXTRA) -lpthreads -pthread
+LDLIBS=-L/opt/X11/lib -lX11 -lm $(EXTRA) -flto -pthread
 INCLUDES=-I/opt/X11/include
 DEBUG=-g -DDEBUG
 DEBUGQUAD=-DQUAD -g
@@ -10,18 +10,18 @@ PROGRAM2=quad
 OBJS=galaxy.o graphics.o quad_tree.o
 
 galsim: galaxy.c $(OBJS)
-	$(CC) $(OBJS) $(LDLIBS)  -o $(PROGRAM)
+	$(CC) $(OBJS)   -o $(PROGRAM) $(LDLIBS)
 
 galaxy.o: graphics.o galaxy.c galaxy.h quad_tree.c quad_tree.h quad_tree.o
-	$(CC) $(CFLAGS) galaxy.h -D _DEFAULT_SOURCE -c galaxy.c
+	$(CC)  galaxy.h -D _DEFAULT_SOURCE -c galaxy.c $(CFLAGS)
 
 
 
 quad_tree.o: quad_tree.c
-	$(CC) $(CFLAGS) $(LDLIBS)  quad_tree.h -c quad_tree.c
+	$(CC)   quad_tree.h -c quad_tree.c $(CFLAGS) $(LDLIBS)
 
 quad_tree:  quad_tree.c debug_quad_tree.o
-	$(CC) quad_tree.o $(LDLIBS) -o $(PROGRAM2)
+	$(CC) quad_tree.o  -o $(PROGRAM2) $(LDLIBS)
 
 
 debug_galaxy.o: galaxy.c galaxy.h
@@ -40,7 +40,7 @@ debug_quad_tree:  quad_tree.c debug_quad_tree.o
 
 
 graphics.o: ./graphics/graphics.c ./graphics/graphics.h
-	gcc $(CFLAGS) $(INCLUDES) -c ./graphics/graphics.c
+	gcc  $(INCLUDES) -c ./graphics/graphics.c $(CFLAGS)
 
 
 clean:

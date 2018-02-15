@@ -1,5 +1,5 @@
 #include "galaxy.h"
-
+#include <pthread.h>
 static double get_wall_seconds() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -17,9 +17,11 @@ int main(int argc, char *argv[]) {
   int N = atoi(argv[1]);
   char * file_name = argv[2];
   int n_steps = atoi(argv[3]);
-  const double gravity = 100.0 / N;
-  const double delta_t = atof(argv[4]);
-  const double theta = atof(argv[5]);
+  double gravity = 100.0 / N;
+  double delta_t = atof(argv[4]);
+  double theta = atof(argv[5]);
+  const int THREADS = atof(argv[7]);
+  
   const uint8_t graphics = atoi(argv[6]);
 
   double timer = get_wall_seconds();
@@ -42,8 +44,28 @@ int main(int argc, char *argv[]) {
   data_t *node_data = malloc(sizeof(data_t) * N);
   double *one_over_mass = malloc(sizeof(double) * N);
   int i, k;
-  
-  double acceleration[2]; 
+  thread_t t_data[THREADS];
+  pthread_t t[THREADS];
+  for (i = 0; i < THREADS; i++) {
+    int start = i *(N / THREADS);
+    t_data[i].start_point = start;
+    
+    if (i == THREADS - 1)
+      t_data[i].end_point = N;
+    else
+      t_data[i].end_point = (i+1) *(N / THREADS);
+
+    // printf("start: %d, end: %d\n", start, t_data[i].end_point);
+
+    t_data[i].gravity = gravity;
+    t_data[i].theta = theta;
+    t_data[i].delta_t = delta_t;
+    t_data[i].velo = velo;
+    t_data[i].forces = forces;
+    t_data[i].node_data = node_data;
+    t_data[i].one_over_mass = one_over_mass;
+    
+  }
 
 
   for (i = 0; i < N; i++) {
@@ -55,12 +77,12 @@ int main(int argc, char *argv[]) {
     velo[i].y = galaxy[i].velocity_y;
   }
  
-  
   // Main driver for the simulation
   for (k = 0; k < n_steps; k++) {
     if (graphics) {
       ClearScreen();
     }
+    // printf("The current timestep: %d\n", k);
     quad_node *root = malloc(sizeof(quad_node));
     root->data = NULL;
     root->low_bound_x = 0;
@@ -71,48 +93,62 @@ int main(int argc, char *argv[]) {
     root->leaf[1] = NULL;
     root->leaf[2] = NULL;
     root->leaf[3] = NULL;
-    
+   
     root->center_mass_x = 0.0;
     root->center_mass_y = 0.0;
     root->tot_mass = 0.0;
     
     for (i = 0; i < N; i++) {
       insert(root, (node_data+i)/* , i */);
+   
       forces[i].x = 0.0;
       forces[i].y = 0.0;
+      if (graphics) {
+        DrawCircle(node_data[i].pos_x,  node_data[i].pos_y, 1, 1, circleRadius, circleColor);
+      }
     }
     update_mass(root);
-    for (i = 0; i < N; i++) {
-      if (graphics) {
-        DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
-      }
-      //quad_node *this_node = search_node(root, i, node_data[i]);
-      quad_node *this_node = (quad_node*)node_data[i].which_quad;
-      traverse_for_force(this_node, root, (double*)(&forces[i]), theta);       
+    //  Creating threads
+   
+    for (i = 0; i < THREADS; i++) {
+      t_data[i].root = root;
+      if (pthread_create(&t[i], NULL, (void *)thread_work, (void *)(t_data+i)))
+        exit(EXIT_FAILURE);
+      // printf("created thread %d\n", (int)t_data[i].t);
     }
-
+    for (i = 0; i < THREADS; i++) {
+      if (pthread_join(t[i], NULL))
+        exit(EXIT_FAILURE);
+    }
+    double acceleration[2];
+   
     for (i = 0; i < N; i++) {
       acceleration[0] = -1 * gravity * forces[i].x * one_over_mass[i];
       acceleration[1] = -1 * gravity * forces[i].y * one_over_mass[i];
+      //printf("force: %.20lf, %.20lf\n", forces[i].x, forces[i].y);
+      //printf("acc: %.20lf, %.20lf\n", acceleration[0], acceleration[1]);
       velo[i].x = velo[i].x + delta_t * acceleration[0];
       velo[i].y = velo[i].y + delta_t * acceleration[1];
+      //printf("velo: %.20lf, %.20lf\n", velo[i].x, velo[i].y);
       node_data[i].pos_x = node_data[i].pos_x + delta_t * velo[i].x;
       node_data[i].pos_y = node_data[i].pos_y + delta_t * velo[i].y;
-   
+      //printf("pos: %.20lf, %.20lf\n", node_data[i].pos_x, node_data[i].pos_y);
     }
 
     if (graphics) {
       Refresh();
       usleep(3000);
     }
+   
     delete(root);
+   
   } //  Ends time step loop
   
   if (graphics) {
     FlushDisplay();
     CloseDisplay();
   }
-
+  
   for (i = 0; i < N; i++) {
     galaxy[i].pos_x = node_data[i].pos_x;
     galaxy[i].pos_y = node_data[i].pos_y;
@@ -121,7 +157,6 @@ int main(int argc, char *argv[]) {
   }
  
   // Dumping the data
-
   write_to_file(galaxy, N);
   free(forces);
   free(velo);
@@ -132,6 +167,22 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+void thread_work(void* arg){
+  
+  thread_t *data = (thread_t *)arg;
+  int i; 
+  int N = data->end_point;
+
+  for (i = data->start_point; i < N; i++) {
+    //   printf("in thread_work, s %d, e %d\n",data->start_point, N);
+    //quad_node *this_node = search_node(root, i, node_data[i]);
+    //printf("i: %d\n", i);
+    traverse_for_force(&data->node_data[i], data->root, &data->forces[i], data->theta);       
+  }
+
+  //return NULL;  
+}
+
 void print_usage(char *prg_name) {
   printf("Usage: %s N filename nsteps delta_t graphics\n", prg_name);
   printf("N, is the number of stars\n");
@@ -140,6 +191,7 @@ void print_usage(char *prg_name) {
   printf("delta_t, is the timestep size\n");
   printf("theta_max, is the threshold\n");
   printf("graphics, to enable graphics (1 = on, 0 = off)\n");
+  printf("n_threads, number of threads \n");
 }
 
 void read_config(char *file_name, star_t *galaxy, int N) {
