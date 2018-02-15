@@ -1,6 +1,6 @@
 CC = gcc
 EXTRA=
-CFLAGS=-std=c11 -Wall -Ofast -march=native -ftree-vectorize $(EXTRA) -lpthreads -pthread
+CFLAGS=-std=c11 -Wall -Ofast -march=native  $(EXTRA) -lpthreads -pthread
 LDLIBS=-L/opt/X11/lib -lX11 -lm $(EXTRA) -flto -pthread
 INCLUDES=-I/opt/X11/include
 DEBUG=-g -DDEBUG

@@ -1,11 +1,12 @@
 #include "galaxy.h"
 #include <pthread.h>
-static double get_wall_seconds() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  double seconds = tv.tv_sec + (double) tv.tv_usec / 1000000;
-  return seconds;
-}
+
+/* static double get_wall_seconds() { */
+/*   struct timeval tv; */
+/*   gettimeofday(&tv, NULL); */
+/*   double seconds = tv.tv_sec + (double) tv.tv_usec / 1000000; */
+/*   return seconds; */
+/* } */
 
 
 int main(int argc, char *argv[]) {
@@ -24,7 +25,7 @@ int main(int argc, char *argv[]) {
   
   const uint8_t graphics = atoi(argv[6]);
 
-  double timer = get_wall_seconds();
+  //  double timer = get_wall_seconds();
   star_t *galaxy = malloc(N * sizeof(star_t));
  
   if (galaxy == NULL ) {
@@ -163,7 +164,7 @@ int main(int argc, char *argv[]) {
   free(galaxy);
   free(one_over_mass);
   free(node_data);
-  printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
+  //  printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
   return 0;
 }
 
