@@ -16,6 +16,7 @@
 const float circleRadius = 0.004, circleColor = 0;
 const int windowWidth = 800;
 
+pthread_barrier_t BARR;
 
 #ifdef DEBUG
 #define DEBUG_FLAG 1

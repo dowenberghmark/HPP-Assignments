@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
     InitializeGraphics(argv[0], windowWidth, windowWidth);
     SetCAxes(0, 1);
   }
-
+  pthread_barrier_init(&BARR, NULL, THREADS);
   force_direction_t *forces = malloc(N * sizeof(force_direction_t));
   velo_t *velo = malloc(N * sizeof(velo_t));
   data_t *node_data = malloc(sizeof(data_t) * N);
@@ -121,20 +121,6 @@ int main(int argc, char *argv[]) {
       if (pthread_join(t[i], NULL))
         exit(EXIT_FAILURE);
     }
-    double acceleration[2];
-   
-    for (i = 0; i < N; i++) {
-      acceleration[0] = -1 * gravity * forces[i].x * one_over_mass[i];
-      acceleration[1] = -1 * gravity * forces[i].y * one_over_mass[i];
-      //printf("force: %.20lf, %.20lf\n", forces[i].x, forces[i].y);
-      //printf("acc: %.20lf, %.20lf\n", acceleration[0], acceleration[1]);
-      velo[i].x = velo[i].x + delta_t * acceleration[0];
-      velo[i].y = velo[i].y + delta_t * acceleration[1];
-      //printf("velo: %.20lf, %.20lf\n", velo[i].x, velo[i].y);
-      node_data[i].pos_x = node_data[i].pos_x + delta_t * velo[i].x;
-      node_data[i].pos_y = node_data[i].pos_y + delta_t * velo[i].y;
-      //printf("pos: %.20lf, %.20lf\n", node_data[i].pos_x, node_data[i].pos_y);
-    }
 
     if (graphics) {
       Refresh();
@@ -164,6 +150,7 @@ int main(int argc, char *argv[]) {
   free(galaxy);
   free(one_over_mass);
   free(node_data);
+  pthread_barrier_destroy(&BARR);
   //  printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
   return 0;
 }
@@ -180,8 +167,19 @@ void thread_work(void* arg){
     //printf("i: %d\n", i);
     traverse_for_force(&data->node_data[i], data->root, &data->forces[i], data->theta);       
   }
+  
+  double acceleration[2];
+  pthread_barrier_wait(&BARR);
+  
+  for (i = data->start_point; i < N; i++) {
+    acceleration[0] = -1 * data->gravity * data->forces[i].x * data->one_over_mass[i];
+    acceleration[1] = -1 * data->gravity * data->forces[i].y * data->one_over_mass[i];
+    data->velo[i].x = data->velo[i].x + data->delta_t * acceleration[0];
+    data->velo[i].y = data->velo[i].y + data->delta_t * acceleration[1];
+    data->node_data[i].pos_x = data->node_data[i].pos_x + data->delta_t * data->velo[i].x;
+    data->node_data[i].pos_y = data->node_data[i].pos_y + data->delta_t * data->velo[i].y;
 
-  //return NULL;  
+  }
 }
 
 void print_usage(char *prg_name) {
