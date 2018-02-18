@@ -19,7 +19,7 @@ const int windowWidth = 800;
 pthread_barrier_t BARR;
 pthread_mutex_t ins_del;
 pthread_cond_t cond;
-quad_node *root = NULL;
+quad_node *root[2] = {NULL, NULL};
 
 #ifdef DEBUG
 #define DEBUG_FLAG 1

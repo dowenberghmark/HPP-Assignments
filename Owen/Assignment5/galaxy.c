@@ -78,7 +78,6 @@ int main(int argc, char *argv[]) {
   }
 
   for (i = 0; i < THREADS; i++) {
-    t_data[i].root = root;
     if (pthread_create(&t[i], NULL, (void *)thread_work, (void *)(t_data+i)))
       exit(EXIT_FAILURE);
     // printf("created thread %d\n", (int)t_data[i].t);
@@ -136,36 +135,33 @@ void thread_work(void* arg){
     }
     //    printf("The current timestep: %d\n", k);
     pthread_mutex_lock(&ins_del);
-    if (root == NULL) {
-      init_root(&root);
+    if (root[k % 2] == NULL) {
+      init_root(&root[k % 2]);
       //printf("Created root: %p\n", root);
     }
-    
+
     for (i = data->start_point; i < N; i++) {
-      insert(root, ((data->node_data)+i)/* , i */);
+      insert(root[k % 2], ((data->node_data)+i)/* , i */);
       data->forces[i].x = 0.0;
       data->forces[i].y = 0.0;
      
     }
-    //printf("%s\n", "Has inserted");
     pthread_mutex_unlock(&ins_del);
+  
     pthread_barrier_wait(&BARR);
     
     if (data->start_point == 0) {
-      update_mass(root);
+      update_mass(root[k % 2]);
     } 
-    
-    
-    
+        
     pthread_barrier_wait(&BARR);
   
     for (i = data->start_point; i < N; i++) {
       if (graphics) {
         DrawCircle(data->node_data[i].pos_x,  data->node_data[i].pos_y, 1, 1, circleRadius, circleColor);
       }
-      //printf("%s\n","Calculating force" );
       
-      traverse_for_force(&data->node_data[i], root, &data->forces[i], data->theta);
+      traverse_for_force(&data->node_data[i], root[k % 2], &data->forces[i], data->theta);
       
      }
   
@@ -191,12 +187,12 @@ void thread_work(void* arg){
 
     if (data->start_point == 0) { // someone needs too delete root.
       //printf("%s\n", "Deleting tree" );
-      delete(root);
-      root = NULL;
+      delete(root[k % 2]);
+      root[k % 2] = NULL;
     }
 
     /*  */
-    pthread_barrier_wait(&BARR);
+    // pthread_barrier_wait(&BARR);
    
   } //  Ends time step loop
 }
