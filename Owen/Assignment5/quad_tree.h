@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-//  #include "galaxy.h"
+#include <pthread.h>
 
 typedef struct data_node{
   double pos_x,pos_y,mass;
@@ -23,8 +23,8 @@ typedef struct quad_tree{
   void *leaf[4];
   double low_bound_x, low_bound_y, height_width;
   double center_mass_x, center_mass_y, tot_mass;
-  //int index;
-  
+  pthread_mutex_t lock;
+  struct quad_tree *parr;
 } quad_node;
 //  Inserting the star into the quad tree
 void insert(quad_node *curr, data_t *to_insert/* , int index */);

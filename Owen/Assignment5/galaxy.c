@@ -106,7 +106,6 @@ int main(int argc, char *argv[]) {
 
   pthread_mutex_destroy(&ins_del);
   pthread_cond_destroy(&cond);
-
   
   // Dumping the data
   write_to_file(galaxy, N);
@@ -128,25 +127,34 @@ void thread_work(void* arg){
   const int n_steps = data->n_steps;
   const int graphics = data->graphics;
   double acceleration[2];
+  int thread_has_lock = 0; 
   // Main driver for the simulation
   for (k = 0; k < n_steps; k++) {
     if (graphics) {
       ClearScreen();
     }
+
     //    printf("The current timestep: %d\n", k);
     pthread_mutex_lock(&ins_del);
     if (root[k % 2] == NULL) {
       init_root(&root[k % 2]);
       //printf("Created root: %p\n", root);
+      thread_has_lock = 1;
+    } else {
+      pthread_mutex_unlock(&ins_del);
     }
 
     for (i = data->start_point; i < N; i++) {
-      insert(root[k % 2], ((data->node_data)+i)/* , i */);
+      insert(root[k % 2], ((data->node_data)+i));
       data->forces[i].x = 0.0;
-      data->forces[i].y = 0.0;
-     
+      data->forces[i].y = 0.0;     
     }
-    pthread_mutex_unlock(&ins_del);
+    //printf("done insert: \n");
+    if (thread_has_lock) {
+      thread_has_lock = 0;
+      pthread_mutex_unlock(&ins_del);
+    }
+
   
     pthread_barrier_wait(&BARR);
     

@@ -6,8 +6,14 @@ const double EPS = 1e-3;
 //  traversing to the existing lowest node  
 void insert(quad_node *curr, data_t *to_insert/* , int index */) {
   int which_curr;
+  pthread_mutex_lock(&curr->lock);
+
   if (curr->leaf[0] == NULL && curr->leaf[1] == NULL && curr->leaf[2] == NULL  && curr->leaf[3] == NULL ) {
+    /* if (curr->parr != NULL) { */
+    /*   pthread_mutex_lock(&(curr->parr)->lock); */
+    /* } */
     if (curr->data == NULL){
+      
       curr->data = to_insert;
       //      curr->index = index;
       //  remember to divide by mass before using it.
@@ -15,7 +21,9 @@ void insert(quad_node *curr, data_t *to_insert/* , int index */) {
       to_insert->which_quad = curr;
       curr->center_mass_x = to_insert->mass * to_insert->pos_x;
       curr->center_mass_y = to_insert->mass * to_insert->pos_y;
+      
     } else {
+      
       split(curr);
     
       int old_which = which_leaf(curr, *curr->data);
@@ -33,6 +41,12 @@ void insert(quad_node *curr, data_t *to_insert/* , int index */) {
 
       curr->center_mass_y = 0.0;
     }
+   
+    /* if (curr->parr != NULL) { */
+    /*   pthread_mutex_unlock(&(curr->parr)->lock); */
+    /* } */
+    
+    
   } else {
     which_curr = which_leaf(curr,*to_insert);
     if (which_curr == -1) {
@@ -43,6 +57,7 @@ void insert(quad_node *curr, data_t *to_insert/* , int index */) {
       insert(curr->leaf[which_curr],to_insert/* , index */);
     }
   }
+  pthread_mutex_unlock(&curr->lock);
 }
 
 //  topmost node, root might have the bounds as 0 0 1
@@ -54,7 +69,9 @@ void split(quad_node* root) {
   for (int i = 0; i < 4; i++) {
     root->leaf[i] = malloc(size);    
     curr = (quad_node*)(root->leaf[i]);
-    curr->data = NULL;    
+    curr->parr = root;
+    curr->data = NULL;
+    pthread_mutex_init(&curr->lock, NULL);
     //curr->index = -1;
     curr->height_width = height_width;
     curr->low_bound_x = root->low_bound_x;
@@ -99,6 +116,7 @@ void delete(quad_node *root) {
       root->leaf[i] = NULL;
     }
   }
+  pthread_mutex_destroy(&root->lock);
   free(root);
   root = NULL;
 }
@@ -197,6 +215,8 @@ double threshold(data_t *root, quad_node *center) {
 void init_root(quad_node **root){
   (*root) = malloc(sizeof(quad_node));
   (*root)->data = NULL;
+  (*root)->parr = NULL;
+  pthread_mutex_init(&(*root)->lock, NULL);
   (*root)->low_bound_x = 0;
   (*root)->low_bound_y = 0;
   (*root)->height_width = 1;

@@ -36,7 +36,6 @@ typedef struct thread_meta_data{
   velo_t *velo;
   data_t *node_data;
   double *one_over_mass;
-  quad_node *root;
   double gravity;
   force_direction_t *forces;
   double theta;
