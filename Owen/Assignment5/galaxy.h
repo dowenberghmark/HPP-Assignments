@@ -17,6 +17,9 @@ const float circleRadius = 0.004, circleColor = 0;
 const int windowWidth = 800;
 
 pthread_barrier_t BARR;
+pthread_mutex_t ins_del;
+pthread_cond_t cond;
+quad_node *root = NULL;
 
 #ifdef DEBUG
 #define DEBUG_FLAG 1
@@ -39,7 +42,8 @@ typedef struct thread_meta_data{
   double theta;
   int start_point;
   int end_point;
-
+  int n_steps;
+  int graphics;
 }thread_t;
 
 /* typedef struct forces { */

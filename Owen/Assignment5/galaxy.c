@@ -34,30 +34,24 @@ int main(int argc, char *argv[]) {
   }
   //  Load the data
   read_config(file_name, galaxy, N);
-  //memcpy(galaxy_next_step, galaxy, 6 * N * sizeof(double));
+
   if (graphics) {
     InitializeGraphics(argv[0], windowWidth, windowWidth);
     SetCAxes(0, 1);
   }
+
   pthread_barrier_init(&BARR, NULL, THREADS);
   force_direction_t *forces = malloc(N * sizeof(force_direction_t));
   velo_t *velo = malloc(N * sizeof(velo_t));
   data_t *node_data = malloc(sizeof(data_t) * N);
   double *one_over_mass = malloc(sizeof(double) * N);
-  int i, k;
+  int i;
   thread_t t_data[THREADS];
   pthread_t t[THREADS];
   for (i = 0; i < THREADS; i++) {
     int start = i *(N / THREADS);
     t_data[i].start_point = start;
-    
-    if (i == THREADS - 1)
-      t_data[i].end_point = N;
-    else
-      t_data[i].end_point = (i+1) *(N / THREADS);
-
-    // printf("start: %d, end: %d\n", start, t_data[i].end_point);
-
+    t_data[i].end_point = (i+1) *(N / THREADS);
     t_data[i].gravity = gravity;
     t_data[i].theta = theta;
     t_data[i].delta_t = delta_t;
@@ -65,10 +59,15 @@ int main(int argc, char *argv[]) {
     t_data[i].forces = forces;
     t_data[i].node_data = node_data;
     t_data[i].one_over_mass = one_over_mass;
+    t_data[i].graphics = graphics;
+    t_data[i].n_steps = n_steps;
     
   }
+  t_data[THREADS - 1].end_point = N;
 
-
+  pthread_mutex_init(&ins_del, NULL);
+  pthread_cond_init(&cond, NULL);
+  
   for (i = 0; i < N; i++) {
     node_data[i].mass = galaxy[i].mass;
     one_over_mass[i] = 1 / galaxy[i].mass;
@@ -77,59 +76,22 @@ int main(int argc, char *argv[]) {
     velo[i].x = galaxy[i].velocity_x;
     velo[i].y = galaxy[i].velocity_y;
   }
- 
-  // Main driver for the simulation
-  for (k = 0; k < n_steps; k++) {
-    if (graphics) {
-      ClearScreen();
-    }
-    // printf("The current timestep: %d\n", k);
-    quad_node *root = malloc(sizeof(quad_node));
-    root->data = NULL;
-    root->low_bound_x = 0;
-    root->low_bound_y = 0;
-    root->height_width = 1;
-    /* root->index = -1; */
-    root->leaf[0] = NULL;
-    root->leaf[1] = NULL;
-    root->leaf[2] = NULL;
-    root->leaf[3] = NULL;
-   
-    root->center_mass_x = 0.0;
-    root->center_mass_y = 0.0;
-    root->tot_mass = 0.0;
-    
-    for (i = 0; i < N; i++) {
-      insert(root, (node_data+i)/* , i */);
-   
-      forces[i].x = 0.0;
-      forces[i].y = 0.0;
-      if (graphics) {
-        DrawCircle(node_data[i].pos_x,  node_data[i].pos_y, 1, 1, circleRadius, circleColor);
-      }
-    }
-    update_mass(root);
-    //  Creating threads
-   
-    for (i = 0; i < THREADS; i++) {
-      t_data[i].root = root;
-      if (pthread_create(&t[i], NULL, (void *)thread_work, (void *)(t_data+i)))
-        exit(EXIT_FAILURE);
-      // printf("created thread %d\n", (int)t_data[i].t);
-    }
-    for (i = 0; i < THREADS; i++) {
-      if (pthread_join(t[i], NULL))
-        exit(EXIT_FAILURE);
-    }
 
-    if (graphics) {
-      Refresh();
-      usleep(3000);
-    }
-   
-    delete(root);
-   
-  } //  Ends time step loop
+  for (i = 0; i < THREADS; i++) {
+    t_data[i].root = root;
+    if (pthread_create(&t[i], NULL, (void *)thread_work, (void *)(t_data+i)))
+      exit(EXIT_FAILURE);
+    // printf("created thread %d\n", (int)t_data[i].t);
+  }
+  
+  
+ for (i = 0; i < THREADS; i++) {
+    if (pthread_join(t[i], NULL))
+      exit(EXIT_FAILURE);
+  }
+  
+
+  // cleaning
   
   if (graphics) {
     FlushDisplay();
@@ -142,7 +104,11 @@ int main(int argc, char *argv[]) {
     galaxy[i].velocity_x = velo[i].x;
     galaxy[i].velocity_y = velo[i].y;
   }
- 
+
+  pthread_mutex_destroy(&ins_del);
+  pthread_cond_destroy(&cond);
+
+  
   // Dumping the data
   write_to_file(galaxy, N);
   free(forces);
@@ -158,28 +124,81 @@ int main(int argc, char *argv[]) {
 void thread_work(void* arg){
   
   thread_t *data = (thread_t *)arg;
-  int i; 
+  int i, k; 
   int N = data->end_point;
-
-  for (i = data->start_point; i < N; i++) {
-    //   printf("in thread_work, s %d, e %d\n",data->start_point, N);
-    //quad_node *this_node = search_node(root, i, node_data[i]);
-    //printf("i: %d\n", i);
-    traverse_for_force(&data->node_data[i], data->root, &data->forces[i], data->theta);       
-  }
-  
+  const int n_steps = data->n_steps;
+  const int graphics = data->graphics;
   double acceleration[2];
-  pthread_barrier_wait(&BARR);
+  // Main driver for the simulation
+  for (k = 0; k < n_steps; k++) {
+    if (graphics) {
+      ClearScreen();
+    }
+    //    printf("The current timestep: %d\n", k);
+    pthread_mutex_lock(&ins_del);
+    if (root == NULL) {
+      init_root(&root);
+      //printf("Created root: %p\n", root);
+    }
+    
+    for (i = data->start_point; i < N; i++) {
+      insert(root, ((data->node_data)+i)/* , i */);
+      data->forces[i].x = 0.0;
+      data->forces[i].y = 0.0;
+     
+    }
+    //printf("%s\n", "Has inserted");
+    pthread_mutex_unlock(&ins_del);
+    pthread_barrier_wait(&BARR);
+    
+    if (data->start_point == 0) {
+      update_mass(root);
+    } 
+    
+    
+    
+    pthread_barrier_wait(&BARR);
   
-  for (i = data->start_point; i < N; i++) {
-    acceleration[0] = -1 * data->gravity * data->forces[i].x * data->one_over_mass[i];
-    acceleration[1] = -1 * data->gravity * data->forces[i].y * data->one_over_mass[i];
-    data->velo[i].x = data->velo[i].x + data->delta_t * acceleration[0];
-    data->velo[i].y = data->velo[i].y + data->delta_t * acceleration[1];
-    data->node_data[i].pos_x = data->node_data[i].pos_x + data->delta_t * data->velo[i].x;
-    data->node_data[i].pos_y = data->node_data[i].pos_y + data->delta_t * data->velo[i].y;
+    for (i = data->start_point; i < N; i++) {
+      if (graphics) {
+        DrawCircle(data->node_data[i].pos_x,  data->node_data[i].pos_y, 1, 1, circleRadius, circleColor);
+      }
+      //printf("%s\n","Calculating force" );
+      
+      traverse_for_force(&data->node_data[i], root, &data->forces[i], data->theta);
+      
+     }
+  
+    
+    pthread_barrier_wait(&BARR);
+  
+    for (i = data->start_point; i < N; i++) {
+      acceleration[0] = -1 * data->gravity * data->forces[i].x * data->one_over_mass[i];
+      acceleration[1] = -1 * data->gravity * data->forces[i].y * data->one_over_mass[i];
+      data->velo[i].x = data->velo[i].x + data->delta_t * acceleration[0];
+      data->velo[i].y = data->velo[i].y + data->delta_t * acceleration[1];
+    
+      data->node_data[i].pos_x = data->node_data[i].pos_x + data->delta_t * data->velo[i].x;
+      data->node_data[i].pos_y = data->node_data[i].pos_y + data->delta_t * data->velo[i].y;
 
-  }
+    }
+
+  
+    if (graphics) {
+      Refresh();
+      usleep(3000);
+    }
+
+    if (data->start_point == 0) { // someone needs too delete root.
+      //printf("%s\n", "Deleting tree" );
+      delete(root);
+      root = NULL;
+    }
+
+    /*  */
+    pthread_barrier_wait(&BARR);
+   
+  } //  Ends time step loop
 }
 
 void print_usage(char *prg_name) {

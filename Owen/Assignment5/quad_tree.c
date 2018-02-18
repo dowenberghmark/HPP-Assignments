@@ -194,6 +194,25 @@ double threshold(data_t *root, quad_node *center) {
 /*   return ret; */
 /* } */
 
+void init_root(quad_node **root){
+  (*root) = malloc(sizeof(quad_node));
+  (*root)->data = NULL;
+  (*root)->low_bound_x = 0;
+  (*root)->low_bound_y = 0;
+  (*root)->height_width = 1;
+  /* (root)->index = -1; */
+  (*root)->leaf[0] = NULL;
+  (*root)->leaf[1] = NULL;
+  (*root)->leaf[2] = NULL;
+  (*root)->leaf[3] = NULL;
+   
+  (*root)->center_mass_x = 0.0;
+  (*root)->center_mass_y = 0.0;
+  (*root)->tot_mass = 0.0;
+    
+
+
+}
 
 #ifdef QUAD
 int main(int argc, char *argv[]){

@@ -46,6 +46,6 @@ void traverse_for_force(data_t *start, quad_node *curr, force_direction_t *force
 double threshold(data_t *root, quad_node *center);
 //  Finds which leaf the node should contain in.
 int which_leaf(quad_node *root, data_t node);
-
-
+// Initialize root
+void init_root(quad_node **root);
 #endif //  __QUAD_TREE
