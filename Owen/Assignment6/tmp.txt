@@ -1,0 +1,5 @@
+N = 5000
+fileName1 = './result.gal'
+fileName2 = './ref_output_data/ellipse_N_05000_after200steps.gal'
+read_doubles_from_file error: failed to open input file './ref_output_data/ellipse_N_05000_after200steps.gal'.
+Error reading file './ref_output_data/ellipse_N_05000_after200steps.gal'
