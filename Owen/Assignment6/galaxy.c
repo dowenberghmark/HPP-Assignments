@@ -86,13 +86,18 @@ int main(int argc, char *argv[]) {
     root->center_mass_x = 0.0;
     root->center_mass_y = 0.0;
     root->tot_mass = 0.0;
-    
+    }
+    #pragma omp for
     for (int i = 0; i < N; i++) {
+      #pragma omp critical
+      {
       insert(root, (node_data+i));
+      }
       forces[i].x = 0.0;
       forces[i].y = 0.0;
-      
     }
+#pragma omp single
+    {
     update_mass(root);
     }
 #pragma omp for schedule(static)
@@ -104,7 +109,7 @@ int main(int argc, char *argv[]) {
       traverse_for_force((quad_node*)node_data[i].which_quad, root, (double*)(&forces[i]), theta);
     }
     
-#pragma omp barrier
+    //#pragma omp barrier
 #pragma omp for schedule(static)
     for (int i = 0; i < N; i++) {
       double acceleration[2]; 
