@@ -22,6 +22,7 @@ const int windowWidth = 800;
 #define DEBUG_FLAG 0
 #endif
 
+
 typedef struct particle {
   double pos_x, pos_y, mass, velocity_x, velocity_y, brightness;
 } star_t;

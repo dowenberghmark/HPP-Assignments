@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 N=5000
-NUMBS=(1 2 4 8 16 32)
+NUMBS=(1 2 4 8 16)
 
 REFS=./ref_output_data/ellipse_N_05000_after200steps.gal
 INP=./input_data/ellipse_N_05000.gal

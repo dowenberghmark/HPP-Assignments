@@ -1,12 +1,12 @@
 #include "galaxy.h"
 #include <omp.h>
 
-static double get_wall_seconds() {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  double seconds = tv.tv_sec + (double) tv.tv_usec / 1000000;
-  return seconds;
-}
+/* static double get_wall_seconds() { */
+/*   struct timeval tv; */
+/*   gettimeofday(&tv, NULL); */
+/*   double seconds = tv.tv_sec + (double) tv.tv_usec / 1000000; */
+/*   return seconds; */
+/* } */
 
 
 int main(int argc, char *argv[]) {
@@ -24,10 +24,10 @@ int main(int argc, char *argv[]) {
   const uint8_t graphics = atoi(argv[6]);
   const uint8_t n_threads = atoi(argv[7]);
   
-  double timer = get_wall_seconds();
+  //  double timer = get_wall_seconds();
   star_t *galaxy = malloc(N * sizeof(star_t));
 
-  omp_set_num_threads(n_threads);
+  
   
   if (galaxy == NULL ) {
     printf("%s\n", "Out of memory");
@@ -45,12 +45,14 @@ int main(int argc, char *argv[]) {
   velo_t *velo = malloc(N * sizeof(velo_t));
   data_t *node_data = malloc(sizeof(data_t) * N);
   double *one_over_mass = malloc(sizeof(double) * N);
-  int i, k;
+  int k = 0;
   
   double acceleration[2]; 
 
+  //omp_set_num_threads(n_threads);
+  
 
-  for (i = 0; i < N; i++) {
+  for (int i = 0; i < N; i++) {
     node_data[i].mass = galaxy[i].mass;
     one_over_mass[i] = 1 / galaxy[i].mass;
     node_data[i].pos_x = galaxy[i].pos_x;
@@ -58,19 +60,24 @@ int main(int argc, char *argv[]) {
     velo[i].x = galaxy[i].velocity_x;
     velo[i].y = galaxy[i].velocity_y;
   }
- 
+  quad_node *root = NULL; 
+
+  /* TODO:  */ //I'll have to check independenceies and sections might be great.
+
   
   // Main driver for the simulation
-  for (k = 0; k < n_steps; k++) {
+#pragma omp  parallel num_threads(n_threads)
+  while (k < n_steps) {
+    #pragma omp single
+    {
     if (graphics) {
       ClearScreen();
     }
-    quad_node *root = malloc(sizeof(quad_node));
+    root = malloc(sizeof(quad_node));
     root->data = NULL;
     root->low_bound_x = 0;
     root->low_bound_y = 0;
     root->height_width = 1;
-    /* root->index = -1; */
     root->leaf[0] = NULL;
     root->leaf[1] = NULL;
     root->leaf[2] = NULL;
@@ -80,45 +87,50 @@ int main(int argc, char *argv[]) {
     root->center_mass_y = 0.0;
     root->tot_mass = 0.0;
     
-    for (i = 0; i < N; i++) {
-      insert(root, (node_data+i)/* , i */);
+    for (int i = 0; i < N; i++) {
+      insert(root, (node_data+i));
       forces[i].x = 0.0;
       forces[i].y = 0.0;
+      
     }
     update_mass(root);
-    #pragma omp parallel
-    for (i = 0; i < N / n_threads; i++) {
-      if (graphics) {
-        DrawCircle(galaxy[i + omp_get_thread_num()].pos_x,  galaxy[i + omp_get_thread_num()].pos_y, 1, 1, circleRadius, circleColor);
-      }
-      //quad_node *this_node = search_node(root, i, node_data[i + omp_get_thread_num()]);
-      quad_node *this_node = (quad_node*)node_data[i + omp_get_thread_num()].which_quad;
-      traverse_for_force(this_node, root, (double*)(&forces[i + omp_get_thread_num()]), theta);       
     }
-
-    for (i = 0; i < N; i++) {
+#pragma omp for
+    for (int i = 0; i < N; i+=1) {
+      if (graphics) {
+        DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
+      }
+      //quad_node *this_node = (quad_node*)node_data[i].which_quad;
+      traverse_for_force((quad_node*)node_data[i].which_quad, root, (double*)(&forces[i]), theta);
+    }
+    //#pragma omp barrier
+    #pragma omp single
+    {
+    for (int i = 0; i < N; i++) {
       acceleration[0] = -1 * gravity * forces[i].x * one_over_mass[i];
       acceleration[1] = -1 * gravity * forces[i].y * one_over_mass[i];
       velo[i].x = velo[i].x + delta_t * acceleration[0];
       velo[i].y = velo[i].y + delta_t * acceleration[1];
       node_data[i].pos_x = node_data[i].pos_x + delta_t * velo[i].x;
       node_data[i].pos_y = node_data[i].pos_y + delta_t * velo[i].y;
-   
     }
-
     if (graphics) {
       Refresh();
       usleep(3000);
     }
     delete(root);
+    k++;
+  }
   } //  Ends time step loop
   
   if (graphics) {
+   
     FlushDisplay();
+   
     CloseDisplay();
   }
-
-  for (i = 0; i < N; i++) {
+   
+  for (int i = 0; i < N; i++) {   
     galaxy[i].pos_x = node_data[i].pos_x;
     galaxy[i].pos_y = node_data[i].pos_y;
     galaxy[i].velocity_x = velo[i].x;
@@ -133,7 +145,7 @@ int main(int argc, char *argv[]) {
   free(galaxy);
   free(one_over_mass);
   free(node_data);
-  printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
+  //  printf("Wall clock time: %lf\n",  get_wall_seconds() - timer);
   return 0;
 }
 
