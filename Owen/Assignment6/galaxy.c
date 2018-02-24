@@ -100,13 +100,16 @@ int main(int argc, char *argv[]) {
     {
     update_mass(root);
     }
-#pragma omp for schedule(static)
+#pragma omp single
     for (int i = 0; i < N; i+=1) {
       if (graphics) {
         DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
       }
       //quad_node *this_node = (quad_node*)node_data[i].which_quad;
-      traverse_for_force((quad_node*)node_data[i].which_quad, root, (double*)(&forces[i]), theta);
+      #pragma omp task
+      {
+        traverse_for_force((quad_node*)node_data[i].which_quad, root, (double*)(&forces[i]), theta, n_threads);
+      }
     }
     
     //#pragma omp barrier
