@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
   double *one_over_mass = malloc(sizeof(double) * N);
   int k = 0;
   
-  double acceleration[2]; 
+
 
   //omp_set_num_threads(n_threads);
   
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     }
     update_mass(root);
     }
-#pragma omp for
+#pragma omp for schedule(static)
     for (int i = 0; i < N; i+=1) {
       if (graphics) {
         DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
@@ -103,10 +103,11 @@ int main(int argc, char *argv[]) {
       //quad_node *this_node = (quad_node*)node_data[i].which_quad;
       traverse_for_force((quad_node*)node_data[i].which_quad, root, (double*)(&forces[i]), theta);
     }
-    //#pragma omp barrier
-    #pragma omp single
-    {
+    
+#pragma omp barrier
+#pragma omp for schedule(static)
     for (int i = 0; i < N; i++) {
+      double acceleration[2]; 
       acceleration[0] = -1 * gravity * forces[i].x * one_over_mass[i];
       acceleration[1] = -1 * gravity * forces[i].y * one_over_mass[i];
       velo[i].x = velo[i].x + delta_t * acceleration[0];
@@ -114,6 +115,8 @@ int main(int argc, char *argv[]) {
       node_data[i].pos_x = node_data[i].pos_x + delta_t * velo[i].x;
       node_data[i].pos_y = node_data[i].pos_y + delta_t * velo[i].y;
     }
+    #pragma omp single
+    {
     if (graphics) {
       Refresh();
       usleep(3000);
