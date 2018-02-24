@@ -38,7 +38,7 @@ void calc_force_aprox(quad_node *root, quad_node *quad, double *force);
 // Calculating the force for a point to point
 void calc_force_point(quad_node *root, quad_node *quad, double *force);
 //  Traverser for using the different force calculations 
-void traverse_for_force(quad_node *start, quad_node *curr, double *force, double theta);
+void traverse_for_force(quad_node *start, quad_node *curr, double *force, double theta, int n_threads);
 //  Calculates the threshold value
 double threshold(quad_node *root, quad_node *center);
 //  Finds which leaf the node should contain in.

@@ -1,5 +1,6 @@
 #include "quad_tree.h"
 #include <stdbool.h>
+#include <omp.h>
 
 const double EPS = 1e-3;
 
@@ -129,8 +130,11 @@ void calc_force_aprox(quad_node *root, quad_node *quad, double *force) {
   distance_stability = (distance+EPS);
   cube_distance_stability = distance_stability * distance_stability * distance_stability;
   one_over_cube_distance_stability = 1 / cube_distance_stability;
+  #pragma omp critical
+  {
   force[0] +=  point->mass * quad->tot_mass * x_diff * one_over_cube_distance_stability;
   force[1] +=  point->mass * quad->tot_mass * y_diff * one_over_cube_distance_stability;
+  }
 }
 
 void calc_force_point(quad_node *root, quad_node *quad, double *force) {
@@ -145,23 +149,34 @@ void calc_force_point(quad_node *root, quad_node *quad, double *force) {
   distance_stability = (distance+EPS);
   cube_distance_stability = distance_stability * distance_stability * distance_stability;
   one_over_cube_distance_stability = 1 / cube_distance_stability;
+  #pragma omp critical
+  {
   force[0] +=  point->mass * quad->data->mass * x_diff * one_over_cube_distance_stability;
   force[1] +=  point->mass * quad->data->mass * y_diff * one_over_cube_distance_stability;
+  }
 }
 
 
-void traverse_for_force(quad_node* start, quad_node* curr, double *force, double theta){
+void traverse_for_force(quad_node* start, quad_node* curr, double *force, double theta, int n_threads){
   double thres = threshold(start, curr);
   bool s[4] = {curr->leaf[0] == NULL, curr->leaf[1] == NULL, curr->leaf[2] == NULL, curr->leaf[3] == NULL};
   if(thres <= theta /* && curr->data != NULL */  ) {
     calc_force_aprox(start, curr, force);
   }
   else if ( !s[0] || !s[1] || !s[2] || !s[3]) {
-    for (int i = 0; i < 4; i++) {
-      if ( /* !s[i]  && */ ((quad_node *)curr->leaf[i])->tot_mass != 0.0)
-        traverse_for_force(start, curr->leaf[i], force, theta);
+    if (n_threads < 4) {
+      for (int i = 0; i < 4; i++) {
+        if (  ((quad_node *)curr->leaf[i])->tot_mass != 0.0)
+          traverse_for_force(start, curr->leaf[i], force, theta, 1);
+      }
+    } else {
+#pragma omp parallel num_threads(4)
+      for (int i = 0; i < 4; i++) {
+        if (omp_get_thread_num() == i && ((quad_node *)curr->leaf[i])->tot_mass != 0.0)
+          traverse_for_force(start, curr->leaf[i], force, theta, n_threads/2);
+      }
     }
-     
+    
   } else if ((s[0] && s[1] && s[2]  && s[3] && /* curr->data != NULL && */ start != curr)) {
      calc_force_point(start, curr, force);
   }
