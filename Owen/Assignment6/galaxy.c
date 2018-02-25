@@ -110,20 +110,16 @@ int main(int argc, char *argv[]) {
     }
     
     //#pragma omp barrier
-#pragma omp for //schedule(static)
+#pragma omp for schedule(static)
     for (int i = 0; i < N; i++) {
-      double acceleration; 
-      acceleration = -1 * gravity * forces[i].x * one_over_mass[i];
-      velo[i].x = velo[i].x + delta_t * acceleration;
-      
+      double acceleration[2]; 
+      acceleration[0] = -1 * gravity * forces[i].x * one_over_mass[i];
+      acceleration[1] = -1 * gravity * forces[i].y * one_over_mass[i];
+      velo[i].x = velo[i].x + delta_t * acceleration[0];
+      velo[i].y = velo[i].y + delta_t * acceleration[1];
     }
-        
-#pragma omp for //schedule(static)
-      for (int i = 0; i < N; i++) {
-        double acceleration = -1 * gravity * forces[i].y * one_over_mass[i];
-        velo[i].y = velo[i].y + delta_t * acceleration;
-      }
-#pragma omp for //schedule(static)
+    
+#pragma omp for schedule(static)
       for (int i = 0; i < N; i++) {
 
       node_data[i].pos_x = node_data[i].pos_x + delta_t * velo[i].x;
