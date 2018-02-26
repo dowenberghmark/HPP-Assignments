@@ -73,15 +73,16 @@ int main(int argc, char *argv[]) {
     if (graphics) {
       ClearScreen();
     }
+    printf("timestep: %d\n",k);
     root = malloc(sizeof(quad_node));
     root->data = NULL;
     root->low_bound_x = 0;
     root->low_bound_y = 0;
     root->height_width = 1;
-    root->leaf[0] = NULL;
-    root->leaf[1] = NULL;
-    root->leaf[2] = NULL;
-    root->leaf[3] = NULL;
+    root->leaf = NULL;
+    /* root->leaf[1] = NULL; */
+    /* root->leaf[2] = NULL; */
+    /* root->leaf[3] = NULL; */
     
     root->center_mass_x = 0.0;
     root->center_mass_y = 0.0;
@@ -103,7 +104,7 @@ int main(int argc, char *argv[]) {
 #pragma omp for schedule(static)
     for (int i = 0; i < N; i+=1) {
       if (graphics) {
-        DrawCircle(galaxy[i].pos_x,  galaxy[i].pos_y, 1, 1, circleRadius, circleColor);
+        DrawCircle(node_data[i].pos_x,  node_data[i].pos_y, 1, 1, circleRadius, circleColor);
       }
       //quad_node *this_node = (quad_node*)node_data[i].which_quad;
       traverse_for_force((quad_node*)node_data[i].which_quad, root, (double*)(&forces[i]), theta);

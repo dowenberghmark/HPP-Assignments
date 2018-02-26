@@ -17,7 +17,7 @@ typedef struct forces {
 typedef struct quad_tree{
   data_t *data;
   //struct quad_tree *leaf[4]; //  3 top right, 2 top left, 0 bottom left, 1 bottom right. A leaf an quad_node
-  void *leaf[4];
+  struct quad_tree *leaf;
   double low_bound_x, low_bound_y, height_width;
   double center_mass_x, center_mass_y, tot_mass;
   //int index;
