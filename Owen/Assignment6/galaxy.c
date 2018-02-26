@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
   force_direction_t *forces = malloc(N * sizeof(force_direction_t));
   velo_t *velo = malloc(N * sizeof(velo_t));
-  data_t *node_data = malloc(sizeof(data_t) * N);
+  data_t *node_data = malloc(sizeof(data_t) * N );
   double *one_over_mass = malloc(sizeof(double) * N);
   int k = 0;
   
@@ -61,8 +61,16 @@ int main(int argc, char *argv[]) {
     velo[i].y = galaxy[i].velocity_y;
   }
   quad_node *root = NULL; 
-
-  /* TODO:  */ //I'll have to check independenceies and sections might be great.
+  root = malloc(sizeof(quad_node));
+  root->data = NULL;
+  root->low_bound_x = 0;
+  root->low_bound_y = 0;
+  root->height_width = 1;
+  root->leaf = NULL;    
+  root->center_mass_x = 0.0;
+  root->center_mass_y = 0.0;
+  root->tot_mass = 0.0;
+ 
 
   
   // Main driver for the simulation
@@ -73,21 +81,14 @@ int main(int argc, char *argv[]) {
     if (graphics) {
       ClearScreen();
     }
-    //printf("timestep: %d\n",k);
-    root = malloc(sizeof(quad_node));
-    root->data = NULL;
-    root->low_bound_x = 0;
-    root->low_bound_y = 0;
-    root->height_width = 1;
     root->leaf = NULL;
-    /* root->leaf[1] = NULL; */
-    /* root->leaf[2] = NULL; */
-    /* root->leaf[3] = NULL; */
-    
+    root->data = NULL;
+
     root->center_mass_x = 0.0;
     root->center_mass_y = 0.0;
     root->tot_mass = 0.0;
-    }
+ 
+      }
     #pragma omp for
     for (int i = 0; i < N; i++) {
       #pragma omp critical
@@ -101,18 +102,18 @@ int main(int argc, char *argv[]) {
     {
     update_mass(root);
     }
-#pragma omp for schedule(static)
+#pragma omp for schedule(dynamic, N/n_threads)
     for (int i = 0; i < N; i+=1) {
       if (graphics) {
         DrawCircle(node_data[i].pos_x,  node_data[i].pos_y, 1, 1, circleRadius, circleColor);
       }
       //quad_node *this_node = (quad_node*)node_data[i].which_quad;
       traverse_for_force((quad_node*)node_data[i].which_quad, root, (double*)(&forces[i]), theta);
-    }
+/*     } */
     
-    //#pragma omp barrier
-#pragma omp for schedule(static)
-    for (int i = 0; i < N; i++) {
+/*     //#pragma omp barrier */
+/* #pragma omp for schedule(dynamic, N/n_threads) */
+/*     for (int i = 0; i < N; i++) { */
       double acceleration[2]; 
       acceleration[0] = -1 * gravity * forces[i].x * one_over_mass[i];
       acceleration[1] = -1 * gravity * forces[i].y * one_over_mass[i];
@@ -132,7 +133,7 @@ int main(int argc, char *argv[]) {
       Refresh();
       usleep(3000);
     }
-    delete(root, 0);
+    delete(root, 1);
     k++;
   }
   } //  Ends time step loop
@@ -152,7 +153,8 @@ int main(int argc, char *argv[]) {
   }
  
   // Dumping the data
-
+  free(root);
+  root = NULL;
   write_to_file(galaxy, N);
   free(forces);
   free(velo);

@@ -7,6 +7,7 @@ const double EPS = 1e-3;
 void insert(quad_node *curr, data_t *to_insert/* , int index */) {
   int which_curr;
   if (curr->leaf == NULL  ) {
+    
     if (curr->data == NULL){
       curr->data = to_insert;
       //  remember to divide by mass before using it.
