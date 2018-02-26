@@ -1,7 +1,7 @@
 CC = gcc
 EXTRA=
-CFLAGS=-std=c11 -Wall -O3 -march=native  $(EXTRA)  
-LDLIBS=-L/opt/X11/lib -lX11 -lm $(EXTRA) -flto 
+CFLAGS=-std=c11 -Wall -Ofast -march=native  $(EXTRA)  -fopenmp
+LDLIBS=-L/opt/X11/lib -lX11 -lm $(EXTRA) -flto -fopenmp
 INCLUDES=-I/opt/X11/include
 DEBUG=-g -DDEBUG
 DEBUGQUAD=-DQUAD -g

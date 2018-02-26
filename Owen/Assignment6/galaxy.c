@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
     if (graphics) {
       ClearScreen();
     }
-    printf("timestep: %d\n",k);
+    //printf("timestep: %d\n",k);
     root = malloc(sizeof(quad_node));
     root->data = NULL;
     root->low_bound_x = 0;
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
       Refresh();
       usleep(3000);
     }
-    delete(root);
+    delete(root, 0);
     k++;
   }
   } //  Ends time step loop

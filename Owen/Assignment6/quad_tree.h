@@ -26,7 +26,7 @@ typedef struct quad_tree{
 //  Inserting the star into the quad tree
 void insert(quad_node *curr, data_t *to_insert/* , int index */);
 //  Deleting the quad tree
-void delete(quad_node *root);
+void delete(quad_node *root, int j);
 //  Creating memory for children leafs
 void split(quad_node *root); //  helper function.
 //  Searching for a node with the specific index_t where meta speeds up the search traversing towards the right node 

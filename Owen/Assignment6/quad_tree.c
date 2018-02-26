@@ -22,9 +22,9 @@ void insert(quad_node *curr, data_t *to_insert/* , int index */) {
         printf("%s\n", "Its not in bounds for moving old data, might imply that two points are equal.");
         exit(EXIT_FAILURE);
       } 
-      insert((quad_node*) &curr->leaf[old_which],curr->data);
+      insert(curr->leaf+old_which,curr->data);
       which_curr = which_leaf(curr,*to_insert);
-      insert((quad_node*) &(curr->leaf[which_curr]),to_insert);
+      insert(curr->leaf+which_curr,to_insert);
       curr->data = NULL;
       curr->tot_mass = 0.0;
       curr->center_mass_x = 0.0;
@@ -82,26 +82,29 @@ int which_leaf(quad_node* root, data_t node) {
   return index;
 }
 
-void delete(quad_node *root) {
-  for (int i = 0; i < 4; i++) {
-    if (root->leaf != NULL) {
-      delete(&root->leaf[i]);
-      root->leaf = NULL;
+void delete(quad_node *root, int j) {
+  if (root->leaf != NULL) {
+    for (int i = 3; i >= 0; i--) {
+    
+      delete((&root->leaf[i]), i);
+      //root->leaf = NULL;
     }
   }
-  free(root);
-  root = NULL;
+  if (j == 0){
+    free(root);
+    root = NULL;
+  }
 }
 
 void update_mass(quad_node *root) {
   if (root->leaf != NULL) {
     for (int i = 0; i < 4; i++) {
-      if (root->leaf != NULL) {
-        update_mass(root->leaf);
-        root->center_mass_x += ((quad_node *)&root->leaf[i])->center_mass_x;
-        root->center_mass_y += ((quad_node *)&root->leaf[i])->center_mass_y;
-        root->tot_mass += ((quad_node *)&root->leaf[i])->tot_mass;
-      }
+      
+        update_mass(root->leaf+i);
+        root->center_mass_x += (root->leaf+i)->center_mass_x;
+        root->center_mass_y += (root->leaf+i)->center_mass_y;
+        root->tot_mass += (root->leaf+i)->tot_mass;
+      
     }
   }
 }
@@ -121,9 +124,15 @@ void calc_force_aprox(quad_node *root, quad_node *quad, double *force) {
   one_over_cube_distance_stability = 1 / cube_distance_stability;
   force[0] +=  point->mass * quad->tot_mass * x_diff * one_over_cube_distance_stability;
   force[1] +=  point->mass * quad->tot_mass * y_diff * one_over_cube_distance_stability;
+  /* printf("%s\n", "approx"); */
+  /* printf("x %lf, y %lf\n", x_diff, y_diff); */
+  /* printf("distance %lf\n", distance); */
+  /* printf("f_x %lf, f_y %lf\n", force[0], force[1]); */
+
 }
 
 void calc_force_point(quad_node *root, quad_node *quad, double *force) {
+  /* printf("%s\n", "point"); */
   data_t *point = root->data;
   double sq_distance, x_diff, y_diff, distance , distance_stability, cube_distance_stability, one_over_cube_distance_stability;
   
@@ -137,9 +146,9 @@ void calc_force_point(quad_node *root, quad_node *quad, double *force) {
   one_over_cube_distance_stability = 1 / cube_distance_stability;
   force[0] +=  point->mass * quad->data->mass * x_diff * one_over_cube_distance_stability;
   force[1] +=  point->mass * quad->data->mass * y_diff * one_over_cube_distance_stability;
-  printf("x %lf, y %lf\n", x_diff, y_diff);
-  printf("distance %lf\n", distance);
-  printf("f_x %lf, f_y %lf\n", force[0], force[1]);
+  /* printf("x %lf, y %lf\n", x_diff, y_diff); */
+  /* printf("distance %lf\n", distance); */
+  /* printf("f_x %lf, f_y %lf\n", force[0], force[1]); */
 }
 
 
@@ -148,16 +157,20 @@ void traverse_for_force(quad_node* start, quad_node* curr, double *force, double
   bool s = {curr->leaf == NULL};
   if(thres <= theta /* && curr->data != NULL */  ) {
     calc_force_aprox(start, curr, force);
+    /* printf("%s\n", "aprox"); */
   }
-  else if ( !s) {
+  else if ((s /*&&  curr->data != NULL && */ /*start != curr*/)) {
+    /* printf("%s\n", "point force"); */
+    calc_force_point(start, curr, force);
+  }  else  {
     for (int i = 0; i < 4; i++) {
       if ( /* !s[i]  && */ ((quad_node *)&curr->leaf[i])->tot_mass != 0.0)
+      {
         traverse_for_force(start, &curr->leaf[i], force, theta);
+        /* printf("%s\n", "trav"); */
+      }
+       
     }
-     
-  } else if ((s && /* curr->data != NULL && */ start != curr)) {
-    printf("%s\n", "point force");
-     calc_force_point(start, curr, force);
   }
 }
 
