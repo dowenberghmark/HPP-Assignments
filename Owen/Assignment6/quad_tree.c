@@ -48,7 +48,7 @@ void insert(quad_node *curr, data_t *to_insert/* , int index */) {
 void split(quad_node* root) {
   size_t size = sizeof(quad_node)*4;  
   double height_width =  ((quad_node *)root)->height_width *  0.5;
-  root->leaf = malloc(size);    
+  root->leaf = malloc(size);
   for (int i = 0; i < 4; i++) {
     
     root->leaf[i].data = NULL;    

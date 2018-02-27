@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
 
   //omp_set_num_threads(n_threads);
   
-
+#pragma omp parallel for num_threads(n_threads)
   for (int i = 0; i < N; i++) {
     node_data[i].mass = galaxy[i].mass;
     one_over_mass[i] = 1 / galaxy[i].mass;
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
    
     CloseDisplay();
   }
-   
+  #pragma omp parallel for num_threads(n_threads)
   for (int i = 0; i < N; i++) {   
     galaxy[i].pos_x = node_data[i].pos_x;
     galaxy[i].pos_y = node_data[i].pos_y;
